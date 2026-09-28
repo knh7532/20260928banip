@@ -1,0 +1,1077 @@
+/*
+ * 드릴다운 화면 (S3) — 정적 `res/sqream/mockup/assets/style.css`에서 흡수.
+ *
+ * ⚠ **토큰 충돌을 스코프로 푼다.** 정적 화면과 React 앱은 `--bg`·`--border`·`--text`·
+ * `--muted`·`--accent` **다섯 개를 같은 이름 다른 값**으로 쓴다. 전역(`:root`)에 그대로
+ * 옮기면 탑뷰가 조용히 리스킨된다. CSS 사용자 정의 속성은 상속되므로, 여기서 `.sqm-page`에
+ * 다시 선언하면 **그 서브트리 안에서만** 정적 화면 팔레트가 이긴다. 이름을 바꾸지 않아도
+ * 되고, 나중에 정적 화면을 지울 때 이 블록만 걷어내면 된다.
+ *
+ * 클래스 이름은 정적 화면과 그대로 맞춘다(`.card`·`.kpi`·`.grid`…). 교집합이 0개라
+ * 충돌하지 않고, 이관할 때 마크업을 1:1로 옮길 수 있어 검증이 쉽다.
+ */
+
+.sqm-page {
+  --bg: #0d1b2e;
+  --bg-deep: #0a1526;
+  --card: #13233c;
+  --card-head: #182b47;
+  --border: #22385c;
+  --text: #dbe6f5;
+  --muted: #7e93b4;
+  --accent: #4fc3f7;
+  --blue: #3274d9;
+  --green: #73bf69;
+  --orange: #ff9830;
+  --red: #f2495c;
+  --yellow: #fade2a;
+  --info: #5794f2;
+  /* 변경 계열 QID 배지와 Cluster Performance의 RAM 계열이 함께 쓴다.
+     새 색이 아니라 `--gpu-3`·`--qt-aggregation`과 같은 hex다(신규 토큰 없이 재사용). */
+  --purple: #a78bfa;
+
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg-deep) 100%);
+  color: var(--text);
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+  font-size: 14px;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  /* 정적 `.page`의 치수를 그대로 옮긴다. 처음엔 임의로 압축했다가 화면이 눈에 띄게
+     달라졌다(codex CDX-S3B-03) — 원본과 같아야 "이관"이라 할 수 있다. */
+  padding: 20px 24px;
+}
+
+/* 원본 `mockup/assets/style.css`의 **첫 줄**은 `* { margin:0; padding:0; box-sizing:border-box }`
+   전역 리셋이었다. 이관하면서 이 한 줄이 빠져 모든 heading이 브라우저 기본 마진을 그대로
+   갖게 됐다 — 카드 헤더 `<h3 class="sqm-card__head">`가 13.5px 밀려 내려가면서
+   **헤더 띠 위에 카드 배경이 14px 노출**됐다(인간 지적 2026-08-09).
+   원본은 `<div class="card-head">`라 애초에 마진이 없었고, React가 `<h3>`으로 바꾸면서
+   드러난 문제다.
+
+   전역 `*`로 넣으면 탑뷰(`app.css`)까지 리스킨되므로 **드릴다운 트리에만** 건다.
+   `:where()`로 특이도를 0으로 만들어 아래 규칙들이 항상 이기게 한다. */
+.sqm-page :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure, blockquote) {
+  margin: 0;
+}
+
+.sqm-page__title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* 부제는 제목 문자열에 이어 붙이지 않고 따로 둔다 — 이어 붙이면 화면마다 제목 길이가
+   달라져 오른쪽 액션 위치가 흔들린다(2026-08-10). */
+.sqm-page__sub {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: 10px;
+}
+
+.sqm-grid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.sqm-grid--kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px; }
+.sqm-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (width <= 1100px) {
+  .sqm-grid--kpi, .sqm-grid--two { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sqm-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sqm-card__head {
+  align-items: center;
+  background: var(--card-head);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  font-size: 13.5px;
+  font-weight: 600;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.sqm-card__body { padding: 14px 16px; }
+
+/* ── KPI 타일 ── */
+.sqm-kpi { align-items: center; display: flex; gap: 14px; padding: 18px; }
+
+.sqm-kpi__icon {
+  border-radius: 9px;
+  display: grid;
+  flex: none;
+  font-size: 20px;
+  height: 42px;
+  place-items: center;
+  width: 42px;
+}
+
+.sqm-kpi__icon--blue { background: #3274d933; color: var(--blue); }
+.sqm-kpi__icon--green { background: #73bf6933; color: var(--green); }
+.sqm-kpi__label { color: var(--muted); font-size: 11.5px; letter-spacing: 1px; }
+.sqm-kpi__value { font-size: 30px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+/* ── 표 ── */
+.sqm-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+.sqm-table th {
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 9px 12px;
+  text-align: left;
+}
+.sqm-table td { border-bottom: 1px solid rgb(34 56 92 / 55%); padding: 9px 12px; text-align: left; }
+.sqm-table tr:last-child td { border-bottom: none; }
+.sqm-table .sqm-table__key { color: var(--muted); width: 40%; }
+.sqm-table__empty { color: var(--muted); padding: 14px; text-align: center; }
+.sqm-table__error { color: var(--red); padding: 14px; }
+
+/* 표가 길어도 카드가 세로로 무한정 늘어나지 않게 한다(인간 지시 2026-08-10).
+   가로도 `auto`다 — 카드가 반폭이 되면서 Query Overview 9개 컬럼이 오른쪽에서 잘렸다
+   (`.sqm-card`가 `overflow: hidden`이라 조용히 사라졌다. 실측으로 확인). */
+.sqm-scrollbox { max-height: 508px; overflow: auto; }
+
+/* 반폭 카드 안에서는 셀 여백을 줄인다. 12px씩 두면 컬럼 9개에서 216px을 여백에만 쓰고
+   Progress가 화면 밖으로 밀린다(실측 830 vs 666). 막대도 최소폭을 낮춘다. */
+.sqm-scrollbox .sqm-table th,
+.sqm-scrollbox .sqm-table td { padding-left: 8px; padding-right: 8px; }
+.sqm-scrollbox .sqm-barcell__track { min-width: 56px; }
+
+/* 높이를 **옆 열에 맞춘다.** 상수를 박으면 왼쪽 열이 바뀔 때마다 어긋나고, 실제로
+   508px로 뒀더니 카드 아래 60px이 비었다(실측).
+   절대배치라 이 카드는 행 높이 계산에 끼어들지 않는다 — 행 높이는 왼쪽 열이 정하고
+   카드는 그 높이를 그대로 채운다. 그래서 남는 틈도, 넘치는 표도 없다. */
+.sqm-fillcell { position: relative; }
+.sqm-fillcell > .sqm-card { display: flex; flex-direction: column; inset: 0; position: absolute; }
+.sqm-fillcell .sqm-scrollbox { flex: 1; max-height: none; min-height: 0; }
+
+/* 머리글 고정 — 안 하면 스크롤을 내린 뒤 어느 컬럼인지 알 수 없다.
+   `th`에 배경이 없으면 아래 행이 글자에 비쳐 보인다. */
+.sqm-scrollbox .sqm-table thead th {
+  background: var(--card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ── 사용량 바 ── */
+.sqm-bar { align-items: baseline; color: var(--muted); display: flex; font-size: 12px; justify-content: space-between; }
+.sqm-bar__track {
+  background: rgb(10 21 38 / 90%);
+  border-radius: 3px;
+  /* 정적 화면은 이 화면에서만 인라인으로 height:14px를 준다 (기본 .bar-track은 9px). */
+  height: 14px;
+  margin-top: 6px;
+  min-width: 90px;
+  overflow: hidden;
+}
+
+.sqm-bar__fill { border-radius: 3px; height: 100%; transition: width .3s; }
+
+/* ══════════ 공용 조각 (components/drilldown/primitives.tsx) ══════════
+ * 전부 정적 `mockup/assets/style.css`에서 치수·색을 그대로 옮긴 것이다.
+ * 임의로 바꾸면 원본과 어긋난다(codex CDX-S3B-03에서 실제로 지적받았다).
+ */
+
+.sqm-card__head > span:first-child { min-width: 0; }
+.sqm-card__aside { color: var(--muted); font-size: 12px; font-weight: 400; }
+.sqm-kpi__text { min-width: 0; }
+.sqm-mt { margin-top: 16px; }
+
+.sqm-grid--kpi4 { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 16px; }
+/* 워커 모니터링 노드 카드 — 3열이었으나 카드당 한 행(세로 적층)으로 개정
+   (인간 지시 2026-08-18): 워커 표가 옆으로 눌리지 않고 전폭을 쓴다. */
+.sqm-grid--stack { grid-template-columns: minmax(0, 1fr); }
+/* 예전엔 2fr/1fr이었다. 왼쪽(차트)이 쓸데없이 넓고 Query Overview가 눌려
+   9개 컬럼이 줄바꿈됐다 — 인간 지시로 반반(2026-08-10). */
+.sqm-grid--wide-left { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+/* 한 행 2열 — Node Health · Top Queries처럼 나란히 봐야 하는 카드 쌍. */
+.sqm-grid--half { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+@media (width <= 1100px) {
+  .sqm-grid--kpi4, .sqm-grid--wide-left, .sqm-grid--half {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 1열이 되면 높이를 빌려 올 옆 열이 없다 — 정적 배치로 되돌리고 상한만 남긴다. */
+  .sqm-fillcell > .sqm-card { position: static; }
+  .sqm-fillcell .sqm-scrollbox { max-height: 508px; }
+}
+
+.sqm-kpi__icon--orange { background: rgb(255 152 48 / 22%); border: 1px solid rgb(255 152 48 / 55%); color: var(--orange); }
+.sqm-kpi__icon--red { background: rgb(242 73 92 / 24%); border: 1px solid rgb(242 73 92 / 55%); color: var(--red); }
+.sqm-kpi__icon--purple { background: rgb(167 139 250 / 22%); border: 1px solid rgb(167 139 250 / 55%); color: #a78bfa; }
+.sqm-kpi__icon--blue { border: 1px solid rgb(50 116 217 / 60%); }
+.sqm-kpi__icon--green { border: 1px solid rgb(115 191 105 / 55%); }
+
+/* ── pill ── */
+.sqm-pill { border-radius: 4px; display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; }
+.sqm-pill--green { background: rgb(115 191 105 / 15%); border: 1px solid rgb(115 191 105 / 45%); color: var(--green); }
+.sqm-pill--red { background: rgb(242 73 92 / 15%); border: 1px solid rgb(242 73 92 / 45%); color: var(--red); }
+.sqm-pill--yellow { background: rgb(250 222 42 / 13%); border: 1px solid rgb(250 222 42 / 40%); color: var(--yellow); }
+.sqm-pill--blue { background: rgb(87 148 242 / 15%); border: 1px solid rgb(87 148 242 / 45%); color: var(--info); }
+.sqm-pill--orange { background: rgb(255 152 48 / 15%); border: 1px solid rgb(255 152 48 / 45%); color: var(--orange); }
+.sqm-pill--grey { background: rgb(126 147 180 / 15%); border: 1px solid rgb(126 147 180 / 40%); color: var(--muted); }
+
+/* ── 버튼 ── */
+.sqm-btn {
+  background: var(--card-head);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  letter-spacing: .5px;
+  padding: 8px 16px;
+}
+
+.sqm-btn:hover:enabled { border-color: var(--accent); }
+.sqm-btn:disabled { cursor: not-allowed; opacity: .45; }
+.sqm-btn--orange { background: var(--orange); border-color: var(--orange); color: #1a1205; font-weight: 700; }
+.sqm-btn--red { background: rgb(242 73 92 / 85%); border-color: var(--red); color: #fff; font-size: 12px; font-weight: 600; padding: 5px 14px; }
+.sqm-btn--red:hover:enabled { background: var(--red); }
+
+/* ── 필터바 ── */
+.sqm-filters { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.sqm-filters select, .sqm-filters input[type="text"] {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  padding: 8px 12px;
+}
+.sqm-filters input[type="text"] { flex: 1; min-width: 220px; }
+.sqm-filters input:focus, .sqm-filters select:focus { border-color: var(--accent); }
+
+/* ── 표 안 가로 막대 ── */
+.sqm-barcell { align-items: center; display: flex; gap: 8px; }
+.sqm-barcell__track { background: rgb(10 21 38 / 90%); border-radius: 3px; flex: 1; height: 9px; min-width: 90px; overflow: hidden; }
+.sqm-barcell__fill { border-radius: 3px; height: 100%; }
+.sqm-barcell__text { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ── stat 박스 ── */
+.sqm-statboxes { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.sqm-statbox { border-radius: 6px; padding: 12px 14px; }
+.sqm-statbox__lbl { font-size: 12px; opacity: .85; }
+.sqm-statbox__val { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.sqm-statbox--blue { background: rgb(50 116 217 / 28%); border: 1px solid rgb(50 116 217 / 60%); }
+.sqm-statbox--red { background: rgb(242 73 92 / 24%); border: 1px solid rgb(242 73 92 / 55%); }
+.sqm-statbox--orange { background: rgb(255 152 48 / 22%); border: 1px solid rgb(255 152 48 / 55%); }
+.sqm-statbox--green { background: rgb(115 191 105 / 22%); border: 1px solid rgb(115 191 105 / 55%); }
+
+/* ── 노드 카드 ── */
+.sqm-nodecards { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sqm-nodecard { background: rgb(24 43 71 / 50%); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+.sqm-nodecard__name { font-size: 13px; font-weight: 600; }
+.sqm-nodecard__state { font-size: 12.5px; margin-top: 4px; }
+.sqm-nodecard--ok .sqm-nodecard__state { color: var(--green); }
+.sqm-nodecard--down .sqm-nodecard__state { color: var(--red); }
+
+/* ── 토스트 ── */
+/* z-index 70: 모달 백드롭(60)보다 위 — 모달이 열린 채 뜨는 토스트(복사 결과·Kill
+   실패)가 백드롭 아래 가려지면 실패 피드백이 사실상 없다 (codex X8-03). */
+.sqm-toast {
+  background: var(--card-head);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  bottom: 28px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 50%);
+  color: var(--text);
+  font-size: 13px;
+  left: 50%;
+  line-height: 1.55;
+  max-width: 640px;
+  padding: 13px 22px;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 70;
+}
+
+/* ── 페이저 ── */
+.sqm-pager { display: flex; gap: 6px; justify-content: flex-end; padding: 12px 16px; }
+.sqm-pager span { border: 1px solid var(--border); border-radius: 4px; color: var(--muted); font-size: 12px; padding: 4px 10px; }
+.sqm-pager__cur { border-color: var(--accent) !important; color: var(--accent) !important; }
+.sqm-pager__note { border: 0 !important; }
+
+/* ── 화면 머리 (제목 + 오른쪽 액션) ── */
+.sqm-pagehead { align-items: center; display: flex; justify-content: space-between; margin-bottom: 16px; }
+.sqm-pagehead .sqm-page__title { margin-bottom: 0; }
+
+/* ── 차트 카드 ── */
+/* 플롯 배경은 카드보다 **어둡다** — 원본 `.prom-chart { background: #111922 }`.
+   이관하면서 이 한 줄이 빠져 배경이 투명이 됐고, 카드 네이비(#13233c)가 그대로 비쳐
+   그래프 영역과 카드가 구분되지 않았다(인간 지적 2026-08-09).
+   패딩도 0으로 되돌린다 — 원본은 `padding: 0`이고 축 여백은 SVG 안에서 잡는다.
+   바깥 패딩이 있으면 어두운 블록이 카드 안쪽으로 들여져 원본과 다르게 보인다. */
+.sqm-chart {
+  background: #111922;
+  height: 260px;
+  overflow: hidden;
+  /* 좌우·아래는 0 — 어두운 블록이 카드 폭을 꽉 채워야 원본과 같다.
+     위만 8px 둔다: C3 `padding.top`과 합쳐 맨 위 눈금이 헤더에 닿지 않게 한다. */
+  padding: 8px 0 0;
+}
+.sqm-chart--sm { height: 200px; }
+
+/* ── QID 배지 (QID 규칙 v2.10) ──
+   계열로 색을 나누고, 등급(L/M/H/C)으로 진하기를 준다. 등급이 높을수록 눈에 띄어야
+   한다 — H·C가 주간 리포트 감시 대상이다(문서 §2.3). */
+.sqm-qid {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: inline-block;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.sqm-qid--read   { background: rgb(87 148 242 / 14%); border-color: rgb(87 148 242 / 38%); color: var(--info); }
+.sqm-qid--ingest { background: rgb(255 152 48 / 14%); border-color: rgb(255 152 48 / 38%); color: var(--orange); }
+.sqm-qid--modify { background: rgb(167 139 250 / 14%); border-color: rgb(167 139 250 / 38%); color: var(--purple); }
+.sqm-qid--ddl    { background: rgb(115 191 105 / 14%); border-color: rgb(115 191 105 / 38%); color: var(--green); }
+.sqm-qid--util   { background: rgb(126 147 180 / 14%); border-color: rgb(126 147 180 / 38%); color: var(--muted); }
+
+/* 등급 — C(상위 5% 극단값)는 테두리를 굵게 해 표에서 바로 눈에 띈다. */
+.sqm-qid--gL { opacity: .72; }
+.sqm-qid--gC { border-width: 2px; font-weight: 700; }
+
+/* ── 호버 (정적 원본 `.prom-*` 이관, 2026-08-09 인간 지시) ──
+   값은 전부 원본 `mockup/assets/style.css`에서 그대로 가져왔다. */
+
+/* 툴팁 — 원본 `.prom-tooltip`. (세로 가이드·호버 점·툴팁 위치는 ECharts 옵션이 담당 — E1/E5) */
+.sqm-tip {
+  background: rgb(8 17 29 / 96%);
+  border: 1px solid #31465f;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 42%);
+  color: var(--text);
+  display: grid;
+  gap: 6px;
+  min-width: 170px;
+  max-width: 280px;
+  padding: 9px 10px;
+}
+.sqm-tip strong { color: #b9cce0; font-size: 10px; font-weight: 600; }
+.sqm-tip span {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+}
+.sqm-tip i { border-radius: 50%; height: 7px; width: 7px; }
+.sqm-tip b { color: #fff; font-weight: 700; }
+
+/* ── 차트 외형(면 채움·crosshair·축 잉크)은 ECharts 옵션(lib/echartsOption.ts)이 통일 스펙으로
+   그린다 — E1/E4. C3 시절 `.c3-*` 보정 규칙은 E5 D5 에서 제거. `.sqm-chart--grafana` 변형
+   클래스는 DrilldownChart 가 계속 붙이며(계약·레이아웃 셀렉터), 시각 차이는 옵션 쪽에 없다. */
+
+/* ── S3-C 추가 조각 ── */
+.sqm-grid--kpi5 { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 16px; }
+@media (width <= 1400px) { .sqm-grid--kpi5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (width <= 1100px) { .sqm-grid--kpi5 { grid-template-columns: minmax(0, 1fr); } }
+
+.sqm-dim { color: var(--muted); }
+
+/* 정렬 가능한 표 헤더 — 정적은 th 자체를 눌렀지만 버튼이라야 키보드로도 정렬된다. */
+.sqm-th-sort {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+}
+.sqm-th-sort:hover { color: var(--accent); }
+.sqm-th-sort.is-active { color: var(--accent); }
+
+/* "정렬 초기화" — 기본 정렬이 아닐 때만 나타난다. */
+.sqm-sortreset {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 400;
+  padding: 2px 8px;
+}
+.sqm-sortreset:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 표 안의 링크형 버튼 — Query ID처럼 눌러서 상세를 여는 것. */
+.sqm-linkbtn {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.sqm-linkbtn:hover { text-decoration: underline solid; }
+
+/* 행 끝 액션 버튼 묶음 */
+.sqm-rowactions { display: flex; gap: 6px; white-space: nowrap; }
+.sqm-btn--tiny { font-size: 11px; padding: 1px 7px; }
+
+/* 명령문 머리 — 라벨 + 복사 버튼 */
+.sqm-cmd__head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 6px;
+}
+
+/* 다이얼로그 경고 — 업무시간·열린 스냅샷 등 "막지는 않지만 알아야 하는" 것. */
+.sqm-warn {
+  background: rgb(255 152 48 / 12%);
+  border: 1px solid rgb(255 152 48 / 45%);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12.5px;
+  padding: 8px 12px;
+}
+
+/* 요약 스트립의 계열 토글 — 누르면 그 계열을 차트에서 숨긴다 (2026-08-10).
+   button 기본 스타일(배경·테두리·검정 글씨)을 지우고 스트립 항목처럼 보이게 한다. */
+.sqm-summary__toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 6px;
+  padding: 0;
+}
+.sqm-summary__toggle.is-off { opacity: .38; }
+.sqm-summary__toggle.is-off b { text-decoration: line-through; }
+
+/* 누를 수 있는 통계 카드 — button이라 기본 스타일을 지운다.
+   color 까지 지워야 한다: UA 의 button 기본색(검정)이 남아 어두운 배경에서
+   Session Statistics 글씨가 검게 보였다(인간 지시 2026-08-10 — 흰색으로). */
+.sqm-statbox--clickable {
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+.sqm-statbox--clickable:hover { filter: brightness(1.18); }
+
+.sqm-pager__btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.sqm-pager__btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.sqm-spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+
+/* ── Worker Monitoring 노드 카드 ── */
+.sqm-wnode { padding: 0; }
+.sqm-wnode__head { border-bottom: 1px solid var(--border); padding: 10px 14px; }
+.sqm-wnode__name { font-size: 14px; font-weight: 700; }
+.sqm-wnode__metrics { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; padding: 12px 14px 6px; }
+.sqm-wnode__val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sqm-wnode__sub {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  font-size: 12.5px;
+  justify-content: space-between;
+  padding: 6px 14px 12px;
+}
+.sqm-wnode--down { border-color: rgb(242 73 92 / 55%); }
+/* 전 슬롯 수집 누락 — down(빨강)과 구분되는 회색 dim (codex X9-02). */
+.sqm-wnode--missing { border-color: rgb(140 150 165 / 45%); opacity: 0.85; }
+
+/* ── Table Usage 유지보수 판정 (X10) ── */
+/* 행 틴트(인간 지시) — 진행 중 파랑(X10-f3) > Rechunk 빨강 > Cleanup 노랑. 값은 가리지 않는다. */
+.sqm-trow--running td { background: rgb(50 116 217 / 10%); }
+.sqm-trow--rechunk td { background: rgb(242 73 92 / 8%); }
+.sqm-trow--cleanup td { background: rgb(250 222 42 / 7%); }
+/* (안내 카드 .sqm-maint 계열은 X10-f1로 카드와 함께 삭제 — 판정 셀만 남는다.) */
+.sqm-maintcell { white-space: nowrap; }
+
+/* 유지보수 상태 설명 모달 (X10-f2) — 이름 클릭으로 열린다. */
+.sqm-tstatus__running {
+  color: var(--blue);
+  font-size: 12.5px;
+  margin-bottom: 8px;
+}
+.sqm-tstatus__stats { font-size: 12px; margin-bottom: 10px; }
+.sqm-tstatus__section { font-size: 12.5px; margin-bottom: 8px; }
+.sqm-tstatus__checks { display: grid; gap: 3px; list-style: none; margin: 6px 0 0; padding: 0; }
+.sqm-tstatus__fail { color: var(--red); }
+.sqm-tstatus__verdict {
+  background: rgb(10 21 38 / 60%);
+  border-left: 3px solid var(--blue);
+  border-radius: 4px;
+  font-size: 12.5px;
+  margin-top: 10px;
+  padding: 8px 10px;
+}
+
+/* 카드 제목 토글 (X9-f4) — 제목을 누르면 본문이 접힌다. */
+.sqm-wnode__toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 8px;
+  padding: 0;
+}
+.sqm-wnode__caret { color: var(--muted); font-size: 10px; }
+
+/* 워커 행(X9-f1 — 평면 표). GPU 병합 셀이 MIG 2행을 감싸고, 수치는 행에서 바로 막대다.
+   down 틴트·missing dim은 **병합 GPU 셀을 제외**한다 — 그 셀은 이웃 MIG 행과
+   공유되므로 한 행의 상태로 칠하면 오정보다. */
+/* X14 — 유형별 틴트: crash 빨강 / hang 주황(--orange 계열, 신규 색 토큰 0). */
+.sqm-wrow--crash td:not(.sqm-wgpu) { background: rgb(242 73 92 / 8%); }
+.sqm-wrow--hang td:not(.sqm-wgpu) { background: rgb(255 152 48 / 8%); }
+.sqm-wrow--missing td:not(.sqm-wgpu) { opacity: 0.55; }
+/* X11 — graceful shutdown 완료(Stopped): 장애(빨강)가 아니라 의도적 정지라
+   중립 회색 틴트만 준다. 병합 GPU 셀 제외는 down과 같은 이유다. */
+.sqm-wrow--stopped td:not(.sqm-wgpu) { background: rgb(140 151 172 / 8%); }
+.sqm-wgpu {
+  background: rgb(10 21 38 / 45%);
+  border-right: 1px solid var(--border);
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ── 모달 (Session Kill — ADR-0004 UI 안전장치) ── */
+.sqm-modal-backdrop {
+  align-items: center;
+  background: rgb(0 0 0 / 60%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 60;
+}
+.sqm-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  max-width: 560px;
+  padding: 20px 22px;
+  width: min(560px, 92vw);
+}
+.sqm-modal h3 { font-size: 15px; margin-bottom: 10px; }
+.sqm-modal p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.sqm-modal textarea {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  min-height: 80px;
+  padding: 10px 12px;
+  resize: vertical;
+  width: 100%;
+}
+.sqm-modal textarea:focus { border-color: var(--accent); outline: none; }
+.sqm-modal__actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+/* ── Query 상세 팝업 탭 (X6) ── */
+.sqm-tabs {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.sqm-tab {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.sqm-tab:hover { color: var(--text); }
+.sqm-tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Query 상세 팝업 생애주기 막대 (X6-f1) — X-View PhaseBar 재사용 ──
+   막대 자체 CSS는 전역 app.css의 .xview__tip-*를 그대로 쓴다. 여기서는
+   드릴다운 모달의 14px 상속과 트랙 배경만 보정한다(토큰 재선언 없음). */
+.sqm-phasebar { font-size: 11px; margin-bottom: 10px; }
+.sqm-phasebar .xview__tip-bar { background: var(--bg-deep); }
+
+/* ── Query 상세 팝업 로그 목록 (X6) ── */
+.sqm-log {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  font-family: "JetBrains Mono", Consolas, monospace; /* .sqm-plan과 같은 스택 */
+  font-size: 12px;
+  gap: 4px;
+  max-height: 340px;
+  overflow: auto;
+  padding: 10px 12px;
+}
+.sqm-log__row {
+  align-items: baseline;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 74px 64px 1fr;
+}
+
+/* ── Query 상세 팝업 구조화 플랜 (X8) — 단계별 소요시간·임계 색 ── */
+.sqm-plansteps {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  max-height: 55vh;
+  overflow: auto;
+  padding: 6px 12px 10px;
+}
+.sqm-plansteps table { border-collapse: collapse; font-size: 12px; width: 100%; }
+.sqm-plansteps th {
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: left;
+}
+.sqm-plansteps td { border-bottom: 1px solid rgb(34 56 92 / 45%); padding: 5px 8px; }
+.sqm-plansteps .num { font-variant-numeric: tabular-nums; text-align: right; }
+.sqm-plansteps tr.is-running td { background: rgb(79 195 247 / 7%); }
+.sqm-plansteps__gpu { color: var(--accent); font-size: 10px; }
+/* 임계 색 (X8-#3): 50s 이상 노랑, 100s 이상 빨강 — 병목을 눈으로 즉시. */
+.sqm-plansteps__time--yellow { color: var(--yellow); font-weight: 600; }
+.sqm-plansteps__time--red { color: var(--red); font-weight: 700; }
+.sqm-plansteps__note { font-size: 11px; margin-top: 8px; }
+
+/* 팝업 종료 배너 (X8) — 라이브 조회에서 사라진 statement */
+.sqm-ended {
+  background: rgb(242 73 92 / 10%);
+  border: 1px solid rgb(242 73 92 / 40%);
+  border-radius: 6px;
+  color: var(--red);
+  font-size: 12px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+}
+
+/* 팝업 자동 갱신 주기 select (X8) — 탭 줄 우측 */
+.sqm-refresh-select {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  margin-left: auto;
+  padding: 2px 6px;
+}
+
+/* ── Disk Spooling 막대 목록 ── */
+.sqm-spool { display: grid; gap: 9px; padding: 8px 4px; }
+.sqm-spool__row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 120px 1fr 90px;
+}
+
+/* ── Main Dashboard: Node Health ── */
+.sqm-nodehealth { display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (width <= 1100px) { .sqm-nodehealth { grid-template-columns: minmax(0, 1fr); } }
+.sqm-nodehealth__sum {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 6px;
+}
+.sqm-nodehealth__workers { display: grid; gap: 4px; margin-top: 8px; }
+/* 아이콘 · 이름 · 상태 · Restart 4칸.
+   ⚠ Restart를 넣으면서 **트랙을 3칸으로 둔 채 자식을 4개**로 만들었더니 버튼이
+   암묵 행으로 밀려 워커마다 두 줄이 됐다(카드 높이 두 배, 실측). 셸 그리드에서
+   두 번 겪은 것과 같은 함정이다 — 자식 수와 트랙 수를 함께 본다. */
+.sqm-workerhealth {
+  align-items: center;
+  display: grid;
+  font-size: 12.5px;
+  gap: 8px;
+  grid-template-columns: 18px 1fr auto auto;
+}
+.sqm-workerhealth__icon {
+  border-radius: 50%;
+  color: #0a1526;
+  display: grid;
+  font-size: 11px;
+  height: 16px;
+  place-items: center;
+  width: 16px;
+}
+.sqm-workerhealth__icon.is-ok { background: var(--green); }
+.sqm-workerhealth__icon.is-bad { background: var(--red); }
+.sqm-ok { color: var(--green); }
+.sqm-bad { color: var(--red); }
+
+/* Heavy 쿼리 행 강조 */
+.sqm-row--heavy td { background: rgb(255 152 48 / 8%); }
+
+/* ══════════ 상세 대시보드 툴바 (③에서 이관 — codex CDX-S3C-01) ══════════
+ * 정적 `res/sqream/style.css`의 `.toolbar`·`.detail-filter` 치수를 그대로 옮긴다.
+ * `.sqm-page`와 형제이므로 팔레트를 여기서도 선언한다(스코프 규칙은 같다).
+ */
+.sqm-toolbar {
+  --border: #22385c;
+  --text: #dbe6f5;
+  --muted: #7e93b4;
+  --accent: #4fc3f7;
+  --card: #13233c;
+  --card-head: #182b47;
+
+  align-items: flex-end;
+  background: #0d1b2e;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+  gap: 14px;
+  /* 필터가 왼쪽에 붙고 뒷줄만 `margin-left:auto`로 민다. `space-between`이면
+     사이가 크게 벌어진다(실측 217px). 화면 이름은 본문 `h2`가 맡는다(2026-08-10). */
+  justify-content: flex-start;
+  padding: 10px 18px;
+}
+
+/* 뒷줄 — 리셋 2종·시간 범위·자동 갱신. 오른쪽 끝에 붙는다. */
+.sqm-toolbar__trailing {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* 워커 이름이 24개로 늘어 폭이 들쭉날쭉해지지 않게 고정한다. */
+.sqm-toolbar__filter--worker select { min-width: 120px; }
+
+.sqm-toolbar__filters { align-items: flex-end; display: flex; flex-wrap: wrap; gap: 10px; }
+.sqm-toolbar__filter { display: flex; flex-direction: column; gap: 3px; }
+.sqm-toolbar__filter > span { color: var(--muted); font-size: 10px; }
+.sqm-toolbar__filter select {
+  background: var(--card-head);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+.sqm-toolbar__filter select:disabled { color: var(--muted); opacity: .75; }
+.sqm-toolbar__filter select:focus { border-color: var(--accent); outline: none; }
+
+/* ===== 20260908 추가 시작 : 조회기간 시작 ~ 끝 직접 입력 UI ===== */
+.sqm-toolbar__date-range {
+  align-items: flex-end;
+  display: flex;
+  gap: 6px;
+  position: relative;
+}
+.sqm-toolbar__filter--datetime input {
+  background: var(--card-head);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 11px;
+  min-width: 168px;
+  padding: 5px 7px;
+}
+.sqm-toolbar__filter--datetime input:focus { border-color: var(--accent); outline: none; }
+.sqm-toolbar__date-sep { color: var(--muted); padding-bottom: 6px; }
+.sqm-toolbar__search {
+  background: #183b64;
+  border: 1px solid #2f6da4;
+  border-radius: 6px;
+  color: #dbeeff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+}
+.sqm-toolbar__search:hover { border-color: var(--accent); }
+.sqm-toolbar__date-error {
+  bottom: -15px;
+  color: #ff8585;
+  font-size: 9px;
+  left: 0;
+  position: absolute;
+  white-space: nowrap;
+}
+/* ===== 20260908 추가 끝 : 조회기간 시작 ~ 끝 직접 입력 UI ===== */
+
+.sqm-toolbar__actions { display: flex; gap: 6px; }
+.sqm-toolbar__reset {
+  background: var(--card-head);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 5px 10px;
+}
+.sqm-toolbar__reset:hover { border-color: var(--accent); color: var(--text); }
+
+/* 툴바가 생기면서 본문이 남은 높이를 차지해야 한다. */
+/* 상단바 · 툴바 · 본문 — **행 수가 자식 수와 같아야 한다.**
+   상단바를 넣을 때 여기를 2행으로 두는 바람에 암묵 3행이 생기면서 트랙이 한 칸씩
+   밀렸다(2026-08-09): `1fr`을 본문이 아니라 툴바가 받아, 본문이 짧은 화면에서는
+   툴바가 281px로 늘어나고 본문이 긴 화면에서는 툴바가 0px로 찌부러지면서
+   카드가 뷰포트 밖으로 밀렸다. 자식을 늘리면 이 줄도 같이 늘려야 한다. */
+.drilldown-content { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.drilldown-content__body { min-height: 0; overflow: hidden; }
+/* ── 시점 고정 칩 ──
+   전폭 띠였다가 차트 카드 우측 상단으로 옮겼다(인간 지시 2026-08-10) — 띠가 화면
+   제목 위를 가로질러 거슬렸고, 고정을 만든 차트 옆에 있는 편이 원인과 표시가 가깝다. */
+.sqm-pinchip {
+  align-items: center;
+  background: rgb(79 195 247 / 14%);
+  border: 1px solid rgb(79 195 247 / 45%);
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  gap: 6px;
+  padding: 2px 4px 2px 10px;
+  white-space: nowrap;
+}
+.sqm-pinchip--stale {
+  background: rgb(255 152 48 / 14%);
+  border-color: rgb(255 152 48 / 50%);
+  color: var(--orange);
+}
+.sqm-pinchip__warn { font-weight: 700; }
+.sqm-pinchip__x {
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.sqm-pinchip__x:hover { background: rgb(255 255 255 / 14%); }
+
+/* 클릭으로 시점을 고를 수 있는 차트 — 커서는 ECharts 옵션(MetricChart)이 알린다. */
+/* 고정 시점 세로선 */
+.sqm-pin-grid line { stroke: var(--accent) !important; stroke-dasharray: 4 3; stroke-width: 1.5px; }
+.sqm-pin-grid text { fill: var(--accent); font-size: 10px; }
+
+/* EXPLAIN 실행계획 모달 (M3 재현 — codex CDX-S3C-05) */
+.sqm-modal--wide { max-width: 820px; width: min(820px, 94vw); }
+.sqm-plan {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  max-height: 55vh;
+  overflow: auto;
+  padding: 14px 16px;
+  white-space: pre;
+}
+
+/* Cluster Performance 현재값 스트립 (정적 .summary-strip — codex CDX-S3C-07) */
+.sqm-summary {
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 18px;
+  padding: 10px 16px;
+}
+.sqm-summary i { border-radius: 2px; display: inline-block; height: 9px; margin-right: 6px; width: 9px; }
+.sqm-wnode__head { align-items: baseline; display: flex; gap: 8px; justify-content: space-between; }
+.sqm-wnode__label { font-size: 11px; }
+
+/* ── Focus+Context 브러시 미니맵 (2026-08-10 · ECharts 판 E5 D3) ── */
+.sqm-brush {
+  background: #0d141c;
+  border-top: 1px solid rgb(130 150 175 / 18%);
+  display: block;
+  height: 48px;
+  width: 100%;
+}
+/* 선택 영역 색·커서는 ECharts 옵션(chartBrushModel.ts brushOption)이 그린다 — E5 D3. */
+/* 미니맵이 있으면 라인 차트가 그만큼 양보한다 — `.sqm-chart` 는 260px·overflow hidden 이라
+   라인이 100% 를 다 쓰면 브러시가 상자 밖으로 밀려 잘린다(E5 D3 에서 발견). */
+.sqm-chart:has(> .sqm-brush) > .metric-chart { height: calc(100% - 48px); }
+
+/* ── Worker 재시작 3단계 가이드 (X11) ── */
+.sqm-rguide { max-width: 560px; }
+.sqm-rguide__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+}
+.sqm-rguide__step {
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.sqm-rguide__step.is-done { border-color: rgb(115 191 105 / 45%); }
+.sqm-rguide__step.is-todo { border-color: rgb(79 195 247 / 45%); }
+.sqm-rguide__step.is-blocked { border-color: rgb(242 73 92 / 45%); }
+.sqm-rguide__step.is-locked { opacity: 0.55; }
+.sqm-rguide__icon { flex: 0 0 auto; width: 18px; text-align: center; }
+.sqm-rguide__step.is-done .sqm-rguide__icon { color: var(--green); }
+.sqm-rguide__step.is-blocked .sqm-rguide__icon { color: var(--red); }
+.sqm-rguide__body { display: flex; flex-direction: column; gap: 6px; }
+.sqm-rguide__body .sqm-btn--tiny { align-self: flex-start; }
+.sqm-rguide__cle {
+  background: rgb(242 73 92 / 8%);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+/* ── 유지보수 수행 예정 (E3) ─────────────────────────────────────────── */
+/* 배지를 그대로 버튼으로 — 시각은 Pill이 담당하고 히트 영역만 제공한다. */
+.sqm-pillbtn { background: none; border: 0; padding: 0; cursor: pointer; }
+.sqm-pillbtn + .sqm-pillbtn { margin-left: 6px; }
+.sqm-pillbtn:focus-visible { outline: 2px solid var(--accent); border-radius: 10px; }
+.sqm-sched__row { display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; font-size: 13px; }
+.sqm-sched__row input[type="datetime-local"] {
+  background: #111922; color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 8px; font: inherit;
+}
+.sqm-sched__row input[type="datetime-local"]:disabled { opacity: 0.5; }
+/* 크롬 기본 달력 아이콘은 검정 — 다크 배경에서 안 보여 클릭 진입점이 죽는다(E3-f1). */
+.sqm-sched__row input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
+}
+
+/* ── Worker Monitoring Service 열 (E5) ──────────────────────────────── */
+/* 실측 SHOW_SUBSCRIBED_INSTANCES처럼 구독 큐마다 한 줄 — 행 높이를 먹지 않게 촘촘히. */
+.sqm-wqueue { line-height: 1.35; }
+
+/* ===== 20260908 추가 시작 : Main Dashboard Statement 상세 - 현재 React 다크 스타일 ===== */
+.sqm-detail-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.sqm-main-statement-sql { margin:0; max-height:55vh; overflow:auto; padding:14px 16px; border:1px solid var(--border); border-radius:6px; background:var(--bg-deep); color:var(--text); font:12px/1.65 Consolas,monospace; white-space:pre-wrap; }
+.sqm-main-plan-scroll { max-height:55vh; overflow:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg-deep); }
+.sqm-main-plan-table { width:100%; border-collapse:collapse; font-size:12px; }
+.sqm-main-plan-table th,.sqm-main-plan-table td { padding:7px 8px; border-bottom:1px solid var(--border); color:var(--text); }
+.sqm-main-plan-table th { position:sticky; top:0; background:var(--panel-2); color:var(--muted); text-align:left; }
+.sqm-main-plan-table .num { text-align:right; }
+/* ===== 20260908 추가 끝 : Main Dashboard Statement 상세 - 현재 React 다크 스타일 ===== */
+
+/* ===== 20260925 추가 시작 : Main Dashboard 레이아웃 / Point 상세 ===== */
+.sqm-main-top { display:grid; grid-template-columns:minmax(220px, 0.34fr) minmax(0, 1.66fr); gap:16px; align-items:stretch; }
+.sqm-main-kpis { display:grid; grid-template-columns:1fr; gap:10px; }
+.sqm-main-kpis .sqm-kpi { min-height:82px; }
+.sqm-main-performance { display:grid; grid-template-columns:minmax(0, 1.65fr) minmax(280px, .75fr); gap:16px; align-items:stretch; }
+.sqm-main-performance > .sqm-card { min-width:0; }
+.sqm-point-empty { color:var(--muted); display:flex; min-height:320px; align-items:center; justify-content:center; }
+.sqm-point-detail { width:100%; border-collapse:collapse; font-size:12px; }
+.sqm-point-detail th,.sqm-point-detail td { border-bottom:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+.sqm-point-detail th { color:var(--muted); width:42%; font-weight:600; }
+@media (width <= 1100px) { .sqm-main-top,.sqm-main-performance { grid-template-columns:minmax(0,1fr); } }
+/* ===== 20260925 추가 끝 : Main Dashboard 레이아웃 / Point 상세 ===== */
+
+/* ===== 20260925 추가 시작 : Main Dashboard 시간대별 Cluster Performance 막대 ===== */
+.sqm-cluster-bars { width:100%; height:360px; background:#111922; }
+.sqm-cluster-bars--empty { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; }
+/* ===== 20260925 추가 끝 : Main Dashboard 시간대별 Cluster Performance 막대 ===== */
+
+/* ===== 20260925 추가 시작 : Cluster Performance ECharts 항상 mount / empty overlay ===== */
+.sqm-cluster-bars-wrap { position:relative; width:100%; min-height:360px; }
+.sqm-cluster-bars-wrap .sqm-cluster-bars { width:100%; height:360px; background:transparent; }
+.sqm-cluster-bars-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; pointer-events:none; }
+/* ===== 20260925 추가 끝 ===== */
+
+
+/* ===== 20260928 추가 시작 : Query Analytics 완료 Query 레이아웃 ===== */
+.sqm-query-top{display:grid;grid-template-columns:245px minmax(0,1fr);gap:16px;align-items:start}.sqm-query-kpis{display:grid;gap:10px}.sqm-query-topcharts{display:grid;grid-template-columns:1fr;gap:16px} /* 20260928 추가 : Resource / Timeline 상하 배치 */.sqm-query-resource-chart{height:360px}.sqm-query-timeline-scroll{max-height:620px;overflow-y:auto}.sqm-query-analysis-row{display:grid;grid-template-columns:245px minmax(0,1fr);gap:16px;margin-top:16px}.sqm-query-group-kpis{display:grid;gap:10px}.sqm-query-group-chart{height:360px}.sqm-query-pager{align-items:center;display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}.sqm-query-pager button,.sqm-query-pager select{background:var(--panel);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 9px}.sqm-query-pager button:disabled{opacity:.4}.sqm-query-page .sqm-table{min-width:1100px}.sqm-query-page .sqm-card{overflow:auto}@media(width<=1200px){.sqm-query-top,.sqm-query-analysis-row{grid-template-columns:1fr}.sqm-query-kpis,.sqm-query-group-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}.sqm-query-topcharts{grid-template-columns:1fr}}
+/* ===== 20260928 추가 끝 : Query Analytics 완료 Query 레이아웃 ===== */
+/* 20260928 추가 : Worker Monitoring */
+.sqm-worker-nodegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}.sqm-worker-nodecard{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;text-align:left;padding:16px;border:1px solid var(--line,#263b57);border-radius:8px;background:var(--panel,#14243c);color:inherit;cursor:pointer}.sqm-worker-nodecard b{grid-column:1/-1;font-size:15px}.sqm-worker-nodecard.is-selected{outline:2px solid #4da3ff}.sqm-worker-metricgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sqm-worker-chart{min-height:210px;padding:12px;border:1px solid var(--line,#263b57);border-radius:6px}.sqm-worker-chart__head{display:flex;justify-content:space-between}.sqm-worker-chart svg{width:100%;height:150px;margin-top:8px}.sqm-worker-chart__time{font-size:11px;opacity:.65;margin-top:5px}@media(max-width:900px){.sqm-worker-metricgrid{grid-template-columns:1fr}}
+
+/* 20260928 추가 : /worker Node당 단일 4-series line chart */
+.sqm-worker-chart--combined{height:330px;position:relative;padding:12px}.sqm-worker-chart--combined svg{width:100%;height:260px;overflow:visible}.sqm-worker-chart__legend{display:flex;gap:18px;margin-bottom:8px}.metric-line.metric-gpu{stroke:#5b8def}.metric-line.metric-cpu{stroke:#82c65b}.metric-line.metric-memory{stroke:#a47df0}.metric-line.metric-disk{stroke:#f0b64d}.sqm-worker-chart__legend .metric-gpu{color:#5b8def}.sqm-worker-chart__legend .metric-cpu{color:#82c65b}.sqm-worker-chart__legend .metric-memory{color:#a47df0}.sqm-worker-chart__legend .metric-disk{color:#f0b64d}
+
+/* ===== 20260928 추가 시작 : Log Monitoring 세로 KPI + 우측 그래프 + 페이징 ===== */
+.sqm-log-layout-20260928{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:stretch;margin-bottom:16px}
+.sqm-log-kpis-20260928{display:grid;grid-template-columns:1fr;gap:12px}
+.sqm-log-kpis-20260928 .sqm-kpi{min-height:92px}
+.sqm-log-dist-20260928{min-height:390px;display:flex;flex-direction:column;justify-content:center;gap:34px;padding:24px}
+.sqm-log-dist-row-20260928{display:grid;grid-template-columns:90px minmax(0,1fr) 80px;align-items:center;gap:14px}
+.sqm-log-dist-row-20260928>span{font-weight:700}.sqm-log-dist-row-20260928>b{text-align:right}
+.sqm-log-dist-track-20260928{height:24px;border-radius:4px;background:rgba(148,163,184,.12);overflow:hidden}.sqm-log-dist-track-20260928 i{display:block;height:100%;background:var(--blue);border-radius:4px;min-width:2px}
+.sqm-log-pager-20260928{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+.sqm-log-pager-20260928 select,.sqm-log-pager-20260928 button{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:6px 10px}.sqm-log-pager-20260928 button:disabled{opacity:.4}
+@media(max-width:1100px){.sqm-log-layout-20260928{grid-template-columns:1fr}.sqm-log-kpis-20260928{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ===== 20260928 추가 끝 : Log Monitoring 세로 KPI + 우측 그래프 + 페이징 ===== */
+
+/* ===== 20260928 추가 : /logs 시간대별 꺾은선 그래프 ===== */
+.sqm-log-line-chart-20260928{width:100%;height:390px;min-height:390px}
+
+/* 20260928 추가 : Query Summary 선택 상세 */
+.sqm-query-group-row{cursor:pointer}.sqm-query-group-row:hover td{background:rgba(73,132,220,.10)}.sqm-query-group-row.is-selected td{background:rgba(73,132,220,.18)}
+.sqm-query-selected-wrap{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(340px,.8fr);gap:16px;margin-top:16px}.sqm-query-selected-chart{height:430px}.sqm-query-detail-list{height:430px;overflow:auto;padding:8px 12px}.sqm-query-detail-item{display:grid;gap:5px;padding:12px 4px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px}.sqm-query-detail-item b{color:var(--text);font-size:13px}.sqm-query-detail-item code{white-space:pre-wrap;word-break:break-word;color:#aebed2;background:rgba(0,0,0,.12);padding:7px;border-radius:4px;max-height:90px;overflow:auto}.sqm-query-detail-empty{padding:30px;color:var(--muted);text-align:center}@media(width<=1200px){.sqm-query-selected-wrap{grid-template-columns:1fr}}
+
+/* ===== 20260928 추가 : Query 선택 Resource/상세를 기존 Resource Usage 위치로 이동 ===== */
+.sqm-query-selected-main{min-width:0}.sqm-query-selected-wrap-inline{margin-top:0}.sqm-query-select-guide{height:430px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}.sqm-query-analysis-row .sqm-query-selected-wrap{margin-top:0}
+/* ===== 20260928 추가 끝 ===== */

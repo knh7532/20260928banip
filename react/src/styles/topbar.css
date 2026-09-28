@@ -1,0 +1,92 @@
+/**
+ * 공통 상단바 스타일 — `DrilldownTopbar`가 **직접 import**한다.
+ *
+ * 원래 `drilldown.css` 안에 있었다. 탑뷰(2026-08-09)도 이 상단바를 쓰게 되면서
+ * 독립 파일로 뺐다. 탑뷰에 `drilldown.css` 전체를 끌어오면 안 되기 때문이다 —
+ * 두 화면이 `--bg`·`--border`·`--text`·`--muted`·`--accent`를 **같은 이름 다른 값**으로
+ * 쓰므로 토큰이 새면 탑뷰가 통째로 리스킨된다.
+ *
+ * 그래서 이 파일은 `.sqm-topbar` 안에서 자기가 쓰는 토큰을 **전부 다시 선언**한다.
+ * `:root`나 `html`에는 아무것도 쓰지 않는다 (계약: drilldown.contract.test.tsx).
+ */
+/* ── 공통 상단바 (정적 `header.topbar` 이관, 2026-08-09) ──
+   S3에서 빠뜨렸던 헤더다. 치수·색은 정적 `assets/style.css`의 `.topbar` 계열 그대로다.
+   토큰은 `.sqm-page`와 같은 이유로 **여기서 다시 선언한다** — `:root`로 새면 탑뷰가
+   리스킨된다(계약: drilldown.contract.test.ts). */
+.sqm-topbar {
+  --border: #22385c;
+  --text: #dbe6f5;
+  --muted: #7e93b4;
+  --accent: #4fc3f7;
+  --green: #73bf69;
+  --red: #f2495c;
+  --orange: #ff9830;
+
+  align-items: center;
+  background: rgba(10, 21, 38, 0.95);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+  gap: 24px;
+  padding: 12px 24px;
+}
+.sqm-topbar__logo { font-size: 20px; font-weight: 700; white-space: nowrap; }
+.sqm-topbar__sq { color: var(--accent); }
+.sqm-topbar__status { align-items: center; display: flex; flex: 1; gap: 20px; }
+.sqm-topbar__chip { color: var(--muted); font-size: 12px; letter-spacing: 0.5px; }
+.sqm-topbar__chip b { color: var(--text); font-size: 13px; margin-left: 6px; }
+.sqm-topbar__health { border-radius: 4px; padding: 2px 10px; }
+.sqm-topbar__health--healthy {
+  background: rgba(115, 191, 105, 0.12);
+  border: 1px solid rgba(115, 191, 105, 0.4);
+  color: var(--green);
+}
+.sqm-topbar__health--degraded {
+  background: rgba(242, 73, 92, 0.12);
+  border: 1px solid rgba(242, 73, 92, 0.4);
+  color: var(--red);
+}
+/* 판정 보류. 조회가 실패했는데 초록으로 두면 거짓 안심을 준다. */
+.sqm-topbar__health--unknown {
+  background: rgba(126, 147, 180, 0.12);
+  border: 1px solid rgba(126, 147, 180, 0.4);
+  color: var(--muted);
+}
+/* 언제 기준인지. 멈춘 값이 현재 상태처럼 보이는 것을 막는다(codex D). */
+.sqm-topbar__stamp { color: var(--muted); font-size: 11px; letter-spacing: 0.3px; }
+.sqm-topbar__stamp--paused { color: var(--orange); }
+
+.sqm-topbar__right { align-items: center; color: var(--muted); display: flex; gap: 18px; }
+.sqm-topbar__bell { font-size: 17px; position: relative; }
+.sqm-topbar__badge {
+  align-items: center;
+  background: var(--red);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  font-size: 10px;
+  height: 15px;
+  justify-content: center;
+  position: absolute;
+  right: -8px;
+  top: -6px;
+  width: 15px;
+}
+.sqm-topbar__admin { font-size: 13px; }
+
+@media (max-width: 1100px) {
+  .sqm-topbar { flex-wrap: wrap; gap: 12px; }
+  .sqm-topbar__status { flex-basis: 100%; order: 3; }
+}
+
+/* 탑뷰(`main.content`)용 수식자.
+   `.content`가 `overflow:auto`인 스크롤 컨테이너라 그냥 두면 상단바가 함께 스크롤된다.
+   sticky로 상단에 붙이고, `.content`의 좌우 패딩(14px)을 음수 마진으로 상쇄해 폭을 채운다.
+   z-index는 app.css가 쓰는 값(20/30/40)보다 낮게 둔다 — 사이드바·모달 위로 뜨면 안 된다. */
+.sqm-topbar--sticky {
+  margin: 0 -14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}

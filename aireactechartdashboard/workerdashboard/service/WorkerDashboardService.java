@@ -1,0 +1,4 @@
+package com.apptomo.v4.aireactechartdashboard.workerdashboard.service;
+import com.apptomo.v4.aireactechartdashboard.workerdashboard.dto.*; import com.apptomo.v4.aireactechartdashboard.workerdashboard.repository.WorkerDashboardRepository; import lombok.RequiredArgsConstructor; import org.springframework.stereotype.Service; import java.time.*; import java.time.format.*; import java.util.*;
+// 20260928 추가
+@Service @RequiredArgsConstructor public class WorkerDashboardService {private final WorkerDashboardRepository repo; private static final DateTimeFormatter F=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); public List<WorkerNodeDto> nodes(){return repo.nodes();} public List<WorkerMetricDto> metrics(String h,String s,String e){return repo.metrics(h,LocalDateTime.parse(s,F),LocalDateTime.parse(e,F));}}

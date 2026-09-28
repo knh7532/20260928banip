@@ -1,0 +1,2123 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── 셸: 사이드바 12.4% + 본문 (원본 시안 레이아웃) ── */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell:has(.sidebar--collapsed) {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+/* ── 사이드바 ── */
+.sidebar {
+  position: relative;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  border-radius: 0 var(--sidebar-radius) var(--sidebar-radius) 0;
+  overflow: hidden;
+  min-width: var(--sidebar-min-w);
+}
+
+.sidebar--collapsed {
+  z-index: 40;
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-min-w);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  transform: translateX(calc(-100% + 12px));
+  transition: transform .2s ease, box-shadow .2s ease;
+  will-change: transform;
+}
+
+.sidebar--collapsed.sidebar--hover-expanded {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-min-w);
+  transform: translateX(0);
+  box-shadow: 12px 0 28px rgba(0, 0, 0, .38);
+}
+
+.sidebar__collapse-toggle {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #35506c;
+  border-radius: 7px;
+  color: #dcecff;
+  background: #13263b;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .32);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.sidebar__collapse-toggle:hover {
+  border-color: var(--link);
+  background: #1a3550;
+}
+
+.sidebar__collapse-toggle span {
+  font-size: 22px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.sidebar--collapsed .sidebar__collapse-toggle {
+  position: absolute;
+  top: 50%;
+  left: auto;
+  right: -10px;
+  transform: translateY(-50%);
+}
+
+.sidebar--collapsed.sidebar--hover-expanded .sidebar__collapse-toggle {
+  position: absolute;
+  left: auto;
+  right: 8px;
+}
+
+.sidebar__scroll {
+  height: 100%;
+  padding: 14px 12px 50px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: none;
+}
+.sidebar__scroll::-webkit-scrollbar { display: none; }
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 2px 4px;
+}
+
+.sidebar__logo-mark {
+  width: 20px;
+  height: 20px;
+  border: 4px solid rgba(255, 255, 255, 0.78);
+  border-radius: 50%;
+  background: var(--link);
+  display: inline-block;
+  box-shadow: 0 0 0 3px rgba(91, 155, 255, 0.2);
+  flex: 0 0 auto;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar__group-title {
+  font-size: var(--fs-label);
+  color: var(--text-3);
+  text-transform: none;
+  margin: 6px 4px 4px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.sidebar__item {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: var(--fs-body);
+  cursor: default;
+  user-select: none;
+}
+
+.sidebar__item.active {
+  background: var(--link);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.55);
+}
+
+/* 상위 카테고리(비 sub 화면 링크)는 은은한 강조로 격하 — 현재 화면 하위 항목(강한
+   파란 배경)과 위계를 분리한다 (시안: 상위=파란 글자, 현재 화면=흰 글자). */
+.sidebar__item--nav.active:not(.sidebar__item--sub) {
+  background: var(--panel-sel);
+  color: var(--link);
+  box-shadow: none;
+}
+
+.sidebar__item[aria-disabled="true"]:not(.active) {
+  color: var(--text-3);
+}
+
+/* R7: PPTX 계층 — GPU 모니터링 하위 화면 5종 들여쓰기 */
+.sidebar__item--sub {
+  padding-left: 22px;
+}
+
+.sidebar__item,
+.sidebar__item span,
+.sidebar__group-title,
+.server-card__name {
+  white-space: nowrap;
+}
+
+.sidebar__servers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sidebar__separator {
+  flex: 0 0 auto;
+  height: 1px;
+  margin: 2px 4px;
+  background: var(--border);
+}
+
+/* R6: 카드는 버튼(인스턴스 선택 토글) — UA 버튼 스타일을 리셋하고 기존 외형 유지 */
+.server-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.server-card--active {
+  border-color: var(--link);
+  background: var(--panel-sel);
+}
+
+.server-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.server-card__name {
+  min-width: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.server-card__badge {
+  flex: 0 0 auto;
+  font-size: var(--fs-label);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.server-card__badge.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.server-card__badge.down {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--danger);
+}
+
+.server-card__usage {
+  margin-top: 4px;
+  font-size: var(--fs-label);
+  color: var(--text-2);
+}
+
+.server-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* R9(F6.2): 카드가 클릭 가능함을 알리는 hover 어포던스 (active와 같은 색 계열) */
+.server-card:hover {
+  border-color: var(--link);
+}
+
+/* R9(F10.2): 키보드 초점 공통 — 리셋·× 등 버튼류·select 전반 */
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ── 본문 ── */
+.content {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 14px 20px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 4px 8px;
+  gap: 12px;
+}
+
+.header__title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  margin: 0;
+}
+
+.header__clock {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  color: var(--text-2);
+}
+
+/* R9(F7.1): 마지막 폴링 성공 시각 — 현재 시각과 구분되는 보조 표기 */
+.header__updated {
+  margin-right: 12px;
+  color: var(--text-3);
+}
+
+/* ── 필터바 ── */
+.filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 120px;
+}
+
+.filter__label {
+  font-size: var(--fs-label);
+  color: var(--text-2);
+}
+
+.filter__select {
+  background: var(--panel-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  font-size: var(--fs-body);
+  font-family: inherit;
+}
+
+.filter__select:disabled {
+  color: var(--text-2);
+  opacity: 0.8;
+}
+
+/* ── 다중 선택 드롭다운 (체크박스) ── */
+.filter__multi {
+  position: relative;
+}
+
+.filter__multi > summary {
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter__multi > summary::-webkit-details-marker {
+  display: none;
+}
+.filter__multi[aria-disabled="true"] > summary {
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+
+.filter__menu {
+  position: absolute;
+  z-index: 20;
+  margin-top: 4px;
+  min-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.filter__menu::-webkit-scrollbar { display: none; }
+
+.filter__opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  font-size: var(--fs-body);
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter__opt:hover {
+  background: var(--panel-sel);
+  border-radius: 3px;
+}
+
+/* R7: Grafana판 리셋 버튼 2종 (필터바 우측) */
+.filterbar__actions {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.filterbar__reset {
+  background: var(--panel-alt);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  font-size: var(--fs-label);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.filterbar__reset:hover {
+  color: var(--text);
+  border-color: var(--link);
+}
+
+/* ── 연결 실패 배너 ── */
+.conn-banner {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: var(--fs-body);
+  margin-bottom: 12px;
+}
+
+/* ── R8 Grafana 24-column / 34-row dashboard canvas ── */
+.dashboard-canvas {
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-top,
+.dashboard-middle,
+.dashboard-bottom {
+  display: grid;
+  gap: var(--dashboard-gap);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dashboard-middle,
+.dashboard-bottom {
+  margin-top: var(--dashboard-gap);
+}
+
+/* R9(F1.1): KPI 스트립 — canvas 최상단 요약 4타일. 고정 그리드 예산에 포함(64px). */
+.dashboard-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--dashboard-gap);
+  height: var(--dashboard-kpi-h);
+  min-width: 0;
+  overflow: hidden;
+  margin-bottom: var(--dashboard-gap);
+}
+
+.kpi-tile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kpi-tile__label {
+  font-size: var(--fs-label);
+  color: var(--text-2);
+}
+
+.kpi-tile__value {
+  font-size: var(--fs-kpi);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-tile__denom {
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+/* In Queue > 0 — 큐 대기는 병목 신호라 주황 강조 (R9 F1.1/F5.2와 동일 의미색) */
+.kpi-tile--alert {
+  border-color: var(--warn);
+}
+
+.kpi-tile--alert .kpi-tile__value {
+  color: var(--warn);
+}
+
+.dashboard-top {
+  grid-template-columns: minmax(0, 13fr) minmax(0, 11fr);
+  height: var(--dashboard-top-h);
+}
+
+/* X8-#5·X8-f1: GPU 화면 전용 — 쿼리 리스트 세로 확장(14 rows), **펼치기 토글
+   시에만** 적용(기본 168px — 리스트가 길어도 아래 섹션이 밀리지 않는다, 인간
+   지시 2026-08-18). 모디파이어라 `.dashboard-top` 원문(계약 축자 대사)·LLM 불변. */
+/* 2026-09-04: 16열 실행 쿼리 표 단독 — ② SQL 쿼리 성능 표 제거(목업 이식). LLM 화면 불변. */
+.dashboard-top--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* 16열 고정 폭 표(합계 1550px) — 패널 안에서 가로 스크롤. 헤더는 가운데·클릭 정렬. */
+.data-table--wide {
+  table-layout: fixed;
+  width: 1550px;
+}
+
+.data-table--wide th,
+.data-table--wide td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-table--wide th {
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-table--wide th:hover,
+.data-table--wide th.is-sorted {
+  color: var(--accent);
+}
+
+/* 열 드래그 순서 변경 — 놓을 자리(왼쪽 삽입) 표시 */
+.data-table--wide th[draggable] {
+  cursor: grab;
+}
+
+.data-table--wide th.is-dragover {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.data-table--wide .row-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.data-table--wide tbody tr:hover td {
+  background: var(--panel-sel);
+}
+
+.data-table--wide tr.row--spool td {
+  background: rgba(255, 90, 20, 0.24);
+}
+
+.data-table--wide tr.row--spool:hover td {
+  background: rgba(255, 90, 20, 0.34);
+}
+
+.data-table--wide tr.row--long td {
+  background: rgba(255, 190, 0, 0.22);
+}
+
+.data-table--wide tr.row--long:hover td {
+  background: rgba(255, 190, 0, 0.32);
+}
+
+.gauge-pair {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.gauge-pair__text {
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.svc-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  background: rgba(250, 222, 42, 0.13);
+  border: 1px solid rgba(250, 222, 42, 0.4);
+  color: #fade2a;
+}
+
+.svc-dim {
+  color: #7e93b4;
+}
+
+.dashboard-top--gpu-tall {
+  height: var(--dashboard-queries-h);
+}
+
+/* X8-f1: 패널 헤더의 펼치기/접기 토글 */
+.panel__expand {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  padding: 1px 8px;
+}
+
+.panel__expand:hover {
+  color: var(--text);
+}
+
+.panel__expand[aria-expanded="true"] {
+  border-color: var(--link);
+  color: var(--link);
+}
+
+/* X8-#5: 쿼리 개수 요약 카드 — 리소스 지표(하단 밴드)와 구분해 리스트보다 먼저.
+   X8-f2: 아래 쿼리 카드와 붙지 않게 섹션 간격을 명시한다(구 KPI 스트립의
+   margin-bottom 역할 승계 — 스트립 자체는 인간 지시로 제거).
+   X16: 상태 축 5장(In Queue·Preparing·Initializing·Executing·Stopped) — 높이 불변. */
+.dashboard-qsummary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--dashboard-gap);
+  height: var(--dashboard-qsummary-h);
+  margin-bottom: var(--dashboard-gap);
+}
+
+.qsummary-card {
+  /* 2026-09-04: 세로 구성(라벨·큰 값·힌트) — 96px 카드. 상태 점 색은 modifier. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.qsummary-card__label {
+  font-size: var(--fs-label);
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.qsummary-card__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: 1px;
+  background: var(--text-3);
+}
+
+.qsummary-card--queue .qsummary-card__dot { background: var(--warn); }
+.qsummary-card--compile .qsummary-card__dot { background: var(--muted); }
+.qsummary-card--init .qsummary-card__dot { background: var(--link); }
+.qsummary-card--run .qsummary-card__dot { background: var(--ok); }
+.qsummary-card--stopped .qsummary-card__dot { background: var(--danger); }
+.qsummary-card--stopped .qsummary-card__value { color: var(--danger); }
+
+.qsummary-card__value {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.qsummary-card__hint {
+  font-size: var(--fs-label);
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-middle {
+  grid-template-columns: minmax(0, 18fr) minmax(0, 6fr);
+  height: var(--dashboard-middle-h);
+}
+
+.dashboard-bottom {
+  grid-template-columns: minmax(0, 18fr) minmax(0, 6fr);
+  height: var(--dashboard-bottom-h);
+}
+
+.dashboard-top > .panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.dashboard-top > .panel > .panel__body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.grid__placeholder {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-3);
+  padding: 40px;
+  text-align: center;
+  font-size: var(--fs-body);
+}
+
+/* ── 패널 ── */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel__title {
+  margin: 0;
+  font-size: var(--fs-panel-title);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel__hintwrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.panel__hint {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-3);
+  font-size: var(--fs-label);
+  cursor: help;
+  line-height: 1;
+}
+
+.panel__hint:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.panel__tip {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  max-width: 320px;
+  padding: 8px 10px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: var(--text-2);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+/* 헤더 우측 액션 슬롯 + × 닫기 (R6) */
+.panel__actions {
+  margin-left: auto;
+  display: inline-flex;
+}
+
+.panel__close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.panel__close:hover:enabled {
+  color: var(--text);
+}
+
+.panel__close:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.panel__body {
+  min-height: 0;
+  padding: 2px 4px;
+  overflow: hidden;
+}
+
+/* ── 데이터 테이블 ── */
+.table-scroll {
+  min-height: 0;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+}
+
+.data-table th,
+.data-table td {
+  padding: 3px 6px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  color: var(--text-2);
+  font-weight: 500;
+  font-size: var(--fs-label);
+  background: var(--panel-alt);
+}
+
+.data-table td {
+  color: var(--text);
+}
+
+.data-table .num {
+  text-align: right;
+}
+
+.data-table .mono {
+  font-family: var(--font-mono);
+  color: var(--text-2);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table .empty {
+  text-align: center;
+  color: var(--text-3);
+  padding: 16px;
+}
+
+/* R9(F5.2): In Queue 행 틴트 — rows/s 정렬 최하단에 밀려도 큐 대기가 눈에 띈다.
+   #fbbf24(--warn)의 8% — 토큰은 rgba를 못 담아 값을 병기한다. */
+.data-table .row--queue td {
+  background: rgba(251, 191, 36, 0.08);
+}
+
+/* GPU 사용률 게이지 셀 */
+.gauge-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 72px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--panel-alt);
+  overflow: hidden;
+}
+
+.gauge-cell__bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--ok);
+  opacity: 0.35;
+}
+
+.gauge-cell__text {
+  position: relative;
+  padding-right: 6px;
+  font-size: var(--fs-label);
+}
+
+/* 상태 배지 */
+.state-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+}
+
+.state-badge.state--run {
+  background: rgba(74, 222, 128, 0.16);
+  color: var(--ok);
+}
+
+.state-badge.state--queue {
+  background: rgba(245, 166, 35, 0.16);
+  color: var(--warn);
+}
+
+.state-badge.state--init {
+  background: rgba(91, 155, 255, 0.16);
+  color: var(--link);
+}
+
+/* L3: LLM 서비스 STOPPED 배지 */
+.state-badge.state--down {
+  background: rgba(248, 113, 113, 0.16);
+  color: var(--danger);
+}
+
+/* X8: ① 테이블 생애주기 상태의 Compile 단계 — PHASE_META의 #6b7280(회색) 재사용,
+   신규 토큰 없음. 나머지 단계는 기존 state--run/queue/init을 그대로 쓴다. */
+.state-badge.state--compile {
+  background: rgba(107, 114, 128, 0.16);
+  color: var(--text-2);
+}
+
+/* X8: ① 테이블 Statement ID 클릭 버튼 — 실행 계획·Kill 상세를 연다.
+   ⚠ .panel--running에는 스타일을 달지 않는다(LLM 화면 LlmProcesses가 공유). */
+.query-linkbtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--link);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.query-linkbtn:hover {
+  color: var(--text);
+}
+
+/* L3: 사이드바 화면 전환 메뉴 (GPU 모니터링 · GPU/LLM 모니터링) */
+.sidebar__item--nav {
+  cursor: pointer;
+}
+
+.sidebar__item:has(.sidebar__drilldown-toggle) { display: flex; align-items: center; justify-content: space-between; }
+.sidebar__drilldown-toggle { display: inline-grid; place-items: center; width: 22px; height: 22px; margin: -4px -5px -4px 4px; padding: 0; border: 0; border-radius: 4px; color: var(--text-2); background: transparent; cursor: pointer; }
+.sidebar__drilldown-toggle[aria-expanded="true"] { color: var(--link); }
+.sidebar__item.active .sidebar__drilldown-toggle,
+.sidebar__item.active .sidebar__drilldown-toggle[aria-expanded="true"] {
+  color: #fff;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, .65));
+}
+.sidebar__drilldown-toggle:hover { background: rgba(255,255,255,.1); }
+.sidebar__drilldown-toggle span { display: block; font-size: 17px; line-height: 1; transform: translateY(-1px); }
+.sidebar__drilldown { display: grid; gap: 2px; margin: 0 0 3px 20px; padding: 5px 0 6px 8px; background: #071827; border-left: 1px solid #18364e; }
+.sidebar__drilldown a { border-radius: 6px 0 0 6px; color: #d9e7f7; font-size: 10px; padding: 7px 10px; text-decoration: none; white-space: nowrap; }
+.sidebar__drilldown a:hover { background: rgba(75, 139, 255, .12); color: #fff; }
+.sidebar__drilldown a.active { background: #153b55; box-shadow: inset 3px 0 #1bbcff; color: #fff; }
+/* .sidebar__drilldown-legacy 는 2026-08-09에 마크업과 함께 제거됐다 (Sidebar.tsx 주석 참조). */
+.drilldown-content { min-width: 0; height: 100vh; background: #071725; }
+.drilldown-content iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* ══════════ R4 차트 ══════════ */
+
+/* R7: 시계열 독립 카드 4개 세로 스택 (Grafana판 미러) */
+.metric-stack {
+  display: grid;
+  /* 전력 카드의 공유 범례 공간을 별도로 확보해 C3 plot 높이가 음수가 되지 않게 한다. */
+  grid-template-rows: repeat(3, minmax(0, 1fr)) minmax(0, 1.3fr);
+  gap: var(--dashboard-gap);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.metric-chart-body {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  padding: 2px 6px 4px;
+  overflow: hidden;
+}
+
+.metric-chart-body--with-legend {
+  padding-bottom: 24px;
+}
+
+/* R7: 우측 열 — 시간 구간(소) + 선택 구간 상세(대)
+   R9-P0(F3.2): 2fr/9fr 고정 분할은 상세 마지막 행(사용 메모리)을 잘랐다 —
+   시간 구간은 내용 높이(auto), 상세가 나머지 전부를 갖는다. */
+.detail-col {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--dashboard-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+.detail-col > .panel > .panel__body {
+  overflow-y: auto;
+}
+
+/* X2: GPU 화면 전용 — X-View 패널 1개가 열 전체를 갖는다 (NX-03).
+   LLM 화면(#/llm)은 위 .detail-col 2행(auto+1fr) 규칙을 그대로 쓴다. */
+.detail-col--xview {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* X-View 본문 — 산점도는 스크롤 없이 패널 안에 맞춘다(요약행 auto + 플롯 1fr). */
+.detail-col--xview > .panel > .panel__body {
+  overflow-y: hidden;
+}
+
+.xview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 4px;
+  height: 100%;
+  min-height: 0;
+}
+
+.xview__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  padding: 0 2px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.xview__summary strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.xview__range {
+  flex: 1 1 100%;
+  color: var(--text-2);
+}
+
+.xview__plot {
+  min-height: 0;
+}
+
+/* X2-f1: 호버 툴팁 — 브라우저 기본 title 대신 화면 내 오버레이 (지연 없음·앱 스타일) */
+.xview__plotwrap {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.xview__tip {
+  /* body 포털에 fixed — 패널 overflow에 잘리지 않는다 (X3 실측 보완) */
+  position: fixed;
+  z-index: 40;
+  min-width: 190px;
+  max-width: 260px;
+  padding: 7px 9px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-2);
+  pointer-events: none;
+}
+
+/* X3-f2: 클릭 고정 — 호버 이탈에도 유지되고, 안의 텍스트(stmt_id 등)를 긁어 복사할
+   수 있다. 바깥 클릭·Esc로 해제. 테두리로 고정 상태를 알린다. */
+.xview__tip--pinned {
+  pointer-events: auto;
+  user-select: text;
+  border-color: var(--link);
+}
+
+.xview__tip-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.xview__tip-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.xview__tip-type {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.xview__tip-rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 8px;
+  margin: 0;
+}
+
+.xview__tip-rows dt {
+  color: var(--text-3);
+}
+
+.xview__tip-rows dd {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.xview__tip-ok {
+  color: #4ade80;
+}
+
+.xview__tip-fail {
+  color: #f87171;
+}
+
+/* X4: 시간 팬 공용 스크롤바 — 3× 조회 안에서 표시 창 이동 (4카드·타임라인·X-View) */
+.pan-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 12px;
+  min-height: 12px;
+  margin-top: 2px;
+}
+
+.pan-scroll__phantom {
+  height: 1px;
+}
+
+.pan-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.pan-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.pan-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+}
+
+/* X4: 표시 필터 — 깔때기 아이콘 + 팝오버 (상태 1행 · 유형 6종 1행) */
+.xview__filterwrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.xview__filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.xview__filter-btn:hover {
+  color: var(--text-2);
+  background: var(--panel-alt);
+}
+
+.xview__filter-btn--active {
+  color: var(--link);
+}
+
+.xview__filter-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 230px;
+  padding: 8px 9px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  font-size: 11px;
+}
+
+.xview__filter-row {
+  margin-bottom: 7px;
+}
+
+.xview__filter-cap {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.xview__filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.xview__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.xview__chip[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--link);
+  background: var(--panel-sel);
+}
+
+.xview__chip[aria-pressed="false"] .xview__chip-swatch {
+  opacity: 0.35;
+}
+
+.xview__chip-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.xview__filter-reset {
+  width: 100%;
+  padding: 3px 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.xview__filter-reset:disabled {
+  color: var(--text-3);
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* X5: 헤더 ⟲ 초기화 버튼 (줌·팬 활성 시에만 표시) */
+.xview__reset-btn {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.xview__reset-btn:hover {
+  color: var(--text-2);
+  border-color: var(--text-3);
+}
+
+/* X5: 하단 상시 범례 — 클릭 토글(팝오버 필터와 상태 공유), 숨김=취소선·흐림 */
+.xview__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 10.5px;
+}
+
+.xview__legend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.xview__legend-btn[aria-pressed="false"] {
+  color: var(--text-3);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.xview__legend-hint {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+/* X5-b: 드래그 구간 쿼리 목록 모달 — 좌 목록 + 우 상세(툴팁과 동일 표기) */
+.xview-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(5, 9, 18, 0.55);
+  display: grid;
+  place-items: center;
+}
+
+.xview-modal {
+  width: min(720px, 92vw);
+  max-height: min(560px, 86vh);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+}
+
+.xview-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.xview-modal__range {
+  margin-left: 10px;
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.xview-modal__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  min-height: 0;
+}
+
+.xview-modal__list {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  border-right: 1px solid var(--border);
+}
+
+.xview-modal__cols {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 56px 52px;
+  gap: 4px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 10.5px;
+}
+
+.xview-modal__cols button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.xview-modal__cols button:hover {
+  color: var(--text-2);
+}
+
+.xview-modal__rows {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.xview-modal__row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 56px 52px;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  border-bottom: 1px solid rgba(35, 47, 71, 0.4);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.xview-modal__row:hover {
+  background: var(--panel-alt);
+}
+
+.xview-modal__row--active {
+  background: var(--panel-sel);
+  color: var(--text);
+}
+
+.xview-modal__cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xview-modal__cell--name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.xview-modal__detail {
+  padding: 10px 12px;
+  overflow-y: auto;
+  min-height: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.xview-modal__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.xview-modal__nav button {
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.xview-modal__nav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* X3: 생애주기 누적 막대 (100%) + 단계 행 */
+.xview__tip-bar {
+  display: flex;
+  height: 10px;
+  margin: 2px 0 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.xview__tip-seg {
+  display: block;
+  height: 100%;
+}
+
+.xview__tip-seg--fail {
+  box-shadow: inset 0 0 0 1.5px var(--danger, #f2495c);
+}
+
+.xview__tip-phases {
+  display: grid;
+  gap: 1px;
+  margin: 0 0 5px;
+}
+
+.xview__tip-phase-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.xview__tip-phase-row dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-3);
+}
+
+.xview__tip-phase-row dd {
+  margin: 0;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.xview__tip-phase-row--fail dt,
+.xview__tip-phase-row--fail dd {
+  color: #f87171;
+}
+
+.xview__tip-nophase {
+  margin: 2px 0 5px;
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.xview__tip-completed {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+}
+
+.xview__tip-failinfo {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+}
+
+/* X-View 산점도 호스트(ECharts canvas, E5 D2) + 드래그 영역·건수 라벨 HTML 오버레이 —
+   SVG 시절의 .xv-dragzone/.xv-dragcount 규격(색·투명도·글자) 그대로. */
+.xview__chart {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: crosshair;
+}
+
+.xv-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.xvo-zone {
+  position: absolute;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  box-sizing: border-box;
+}
+
+.xvo-count {
+  /* 높이·행간·패딩·글자 크기는 컴포넌트가 차트 스케일(k)에 맞춰 인라인으로 준다 (codex E5-01) */
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: rgba(20, 27, 46, 0.95);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.xview__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.timerange {
+  /* 2/11-row 소패널의 짧은 본문에서도 값이 세로로 잘리지 않게 압축한다. */
+  padding: 2px 8px;
+  line-height: 16px;
+}
+
+.timerange__value {
+  display: block;
+  overflow: hidden;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── 타임라인 (D3) ── */
+.timeline {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  height: 100%;
+  padding: 2px 6px 4px;
+}
+
+.timeline__plot-scroll {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* R9-P0(F3.1): 내부 스크롤 어포던스 — 하단 sticky 페이드로 "더 있음"을 알린다
+   (All 뷰 24행이 잘림처럼 보이던 문제). 스크롤바는 아래 공통 스타일로 상시 가시화. */
+.timeline__plot-scroll::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 14px;
+  margin-top: -14px;
+  background: linear-gradient(to bottom, transparent, rgba(20, 27, 46, 0.85));
+  pointer-events: none;
+}
+
+/* R9-P0: 내부 스크롤 영역 공통 스크롤바 가시화 (webkit — 현장 Chrome/Edge) */
+.timeline__plot-scroll::-webkit-scrollbar,
+.detail-col > .panel > .panel__body::-webkit-scrollbar,
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.timeline__plot-scroll::-webkit-scrollbar-thumb,
+.detail-col > .panel > .panel__body::-webkit-scrollbar-thumb,
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.timeline__plot-scroll::-webkit-scrollbar-thumb:hover,
+.detail-col > .panel > .panel__body::-webkit-scrollbar-thumb:hover,
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+}
+
+/* 타임라인 캔버스 호스트 (ECharts, E5 D4) — 높이는 컴포넌트가 viewBox×k 로 지정, 폭은 스크롤 상자에 맞춤.
+   행 배경·라벨·막대·축·브러시 스타일은 lib/timelineOption.ts 가 토큰으로 그린다(구 .tl-* 규칙). */
+.timeline__chart {
+  width: 100%;
+  display: block;
+}
+
+.timeline__empty,
+.detail__empty {
+  color: var(--text-3);
+}
+
+.timeline__empty {
+  padding: 24px;
+  text-align: center;
+  font-size: var(--fs-body);
+}
+
+.timeline__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 2px 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-label);
+  color: var(--text-2);
+}
+
+.timeline__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timeline__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ── 선택 구간 상세 ── */
+.detail {
+  margin: 0;
+  padding: 6px 10px;
+}
+
+.detail__empty {
+  padding: 24px;
+  text-align: center;
+  font-size: var(--fs-body);
+}
+
+/* R9(F6.1): 상세 "전체" 상태의 브러시 안내 — 인터랙션 발견성 */
+.detail__scope-hint {
+  padding: 4px 8px;
+  font-size: var(--fs-label);
+  color: var(--text-3);
+}
+
+.detail__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail__row:last-child {
+  border-bottom: none;
+}
+
+.detail__key {
+  color: var(--text-2);
+  font-size: var(--fs-body);
+}
+
+.detail__val {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-align: right;
+}
+
+.detail__badge {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--panel-sel);
+  color: var(--link);
+  font-size: var(--fs-label);
+  font-weight: 500;
+}
+
+/* ── 시계열 4종 (C3) ── */
+.metric-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+}
+
+.metric-sub__title {
+  font-size: var(--fs-label);
+  color: var(--text-2);
+  margin: 2px 0;
+}
+
+.metric-chart {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+
+/* R9(F3.4): 공란 상태 — 빈 축 박스 대신 "데이터 없음" 문구가 중앙에 보인다 */
+.metric-chart--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-body);
+  color: var(--text-3);
+}
+
+/* 시계열 하단 공유 범례 (R6 — PPTX "— GPU-0 … — GPU-3"). c3 인셋 범례를 대체한다. */
+.metric-strip__legend {
+  position: absolute;
+  right: 6px;
+  bottom: 3px;
+  left: 6px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px 14px;
+  max-height: 20px;
+  margin: 0;
+  padding: 0 0 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  list-style: none;
+  font-size: var(--fs-label);
+  color: var(--text-2);
+  justify-content: flex-start;
+}
+
+.metric-strip__legend li {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.metric-strip__line {
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  display: inline-block;
+}
+
+/* R9(F4.2): M1 범례 스와치는 점선 — 차트 라인의 stroke-dasharray와 짝 */
+.metric-strip__line--dashed {
+  height: 0;
+  border-top: 2px dashed;
+  border-radius: 0;
+}
+
+/* ── 서버 게이지 카드 3종 (C3 gauge) ── */
+.server-gauges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--dashboard-gap);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.gauge-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  padding: 6px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gauge-card__name {
+  font-size: var(--fs-panel-title);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+/* R6: 링 게이지 4단 세로 스택 (PPTX 카드 — 2×2 grid에서 변경) */
+.gauge-card__sub {
+  text-align: center;
+  font-size: var(--fs-label);
+  color: var(--text-2);
+  margin: -4px 0 6px;
+}
+
+.gauge-card__stack {
+  display: grid;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  min-height: 0;
+}
+
+.gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gauge__chart {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+
+.gauge__label {
+  font-size: var(--fs-label);
+  color: var(--text-2);
+  margin-top: 2px; /* 반원 시절 -6px — 링은 아래 여백이 없다 */
+}
+
+/* R9(F3.5): 공란 상태 자리표시 게이지 — arc 없이 "—" 값과 라벨로 골격 유지 */
+.gauge--placeholder {
+  justify-content: center;
+}
+
+.gauge__placeholder-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+@media (max-width: 1365px) {
+  .dashboard-canvas {
+    min-width: var(--dashboard-min-w);
+  }
+}
+
+/* ── ECharts 통일 툴팁 (E1 — 시안 .ec-tip 마크업) ───────────────────────── */
+.ec-tip strong {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-2);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.ec-tip span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #dbe2f0;
+  line-height: 1.75;
+}
+.ec-tip span i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.ec-tip span b {
+  margin-left: auto;
+  padding-left: 18px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 실행 쿼리 표 작업 열 버튼 (2026-09-04) — 탑뷰 토큰만 쓴다(.sqm-* 변수는 .sqm-page 스코프). */
+.rq-btn {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  padding: 1px 7px;
+}
+
+.rq-btn:hover:enabled {
+  border-color: var(--accent);
+}
+
+.rq-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rq-btn--red {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.rq-btn--red:hover:enabled {
+  background: var(--danger);
+  color: var(--text-on-accent);
+}
+
+
+/* ===== 20260908 추가 시작 : Overview 조회기간 시작 ~ 끝 직접 입력 UI ===== */
+.filterbar__date-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.filter--datetime { min-width: 190px; }
+.filter--datetime .filter__select { min-width: 190px; }
+.filterbar__date-sep {
+  align-self: flex-end;
+  padding: 0 2px 7px;
+  color: var(--text-2);
+}
+.filterbar__search {
+  align-self: flex-end;
+  background: var(--panel-alt);
+  color: var(--text);
+  border: 1px solid var(--link);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  font-size: var(--fs-body);
+  font-family: inherit;
+  cursor: pointer;
+}
+.filterbar__search:hover { background: var(--panel-sel); }
+.filterbar__date-error {
+  align-self: flex-end;
+  padding-bottom: 6px;
+  color: var(--danger);
+  font-size: var(--fs-label);
+}
+.filter--datetime input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+/* ===== 20260908 추가 끝 : Overview 조회기간 시작 ~ 끝 직접 입력 UI ===== */
+
+/* ===== 20260916 추가 시작 : Overview 상태 5카드 좌측 세로 + 실시간 쿼리 높이 확대 ===== */
+.dashboard-realtime-row {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: var(--dashboard-gap);
+  height: 430px;
+  margin-bottom: var(--dashboard-gap);
+  min-width: 0;
+}
+
+.dashboard-realtime-row--tall {
+  height: 560px;
+}
+
+.dashboard-realtime-row .dashboard-qsummary {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: var(--dashboard-gap);
+  height: 100%;
+  margin-bottom: 0;
+  min-height: 0;
+}
+
+.dashboard-realtime-row .qsummary-card {
+  min-height: 0;
+  padding: 7px 12px;
+}
+
+.dashboard-realtime-row .qsummary-card__value {
+  font-size: 24px;
+}
+
+.dashboard-realtime-table {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-realtime-table > .panel {
+  height: 100%;
+}
+
+.dashboard-realtime-table .table-scroll,
+.dashboard-realtime-table .panel__body {
+  max-height: none;
+}
+/* ===== 20260916 추가 끝 : Overview 상태 5카드 좌측 세로 + 실시간 쿼리 높이 확대 ===== */
+
+/* ===== 20260916 추가 시작 : Worker Log 타임라인 조회기간/실행시간 필터 ===== */
+.timeline-filter-row{width:100%;min-width:0;margin-top:var(--dashboard-gap)}
+.timeline-filterbar{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap;width:100%;box-sizing:border-box;margin:0;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--panel-alt);overflow-x:auto}
+.timeline-filterbar__sep{padding-bottom:8px;color:var(--text-3);flex:0 0 auto}
+.timeline-filterbar__duration{width:110px}
+.timeline-filterbar__unit{margin-left:6px;color:var(--text-2);white-space:nowrap}
+/* ===== 20260916 추가 끝 : Worker Log 타임라인 조회기간/실행시간 필터 ===== */
+
+/* ===== 20260916 추가 시작 : Overview 하단 Table Chunk / Internal Runtime Error ===== */
+.overview-bottom-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--dashboard-gap);margin-top:var(--dashboard-gap);min-width:0}
+.overview-extra-panel{min-height:310px;overflow:hidden}.overview-extra-panel .panel__head{display:flex;align-items:center;gap:10px}.overview-extra-sub{font-size:11px;color:var(--text-3);font-weight:400}
+.chunk-map{min-height:260px;padding:14px;display:flex;align-items:flex-end;gap:14px;overflow-x:auto}.chunk-item{flex:0 0 auto;text-align:center;color:var(--text-2);font-size:11px}.chunk-square{position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--panel-alt);box-sizing:border-box}.chunk-square__compressed{position:absolute;left:8px;bottom:8px;border:2px solid var(--link);background:rgba(84,155,255,.12);box-sizing:border-box}.chunk-square__name{position:relative;z-index:2;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(9,19,36,.75);padding:2px 4px}.chunk-size{margin-top:6px;white-space:nowrap}.error-chart{height:260px;padding:14px;box-sizing:border-box}.error-chart svg{width:100%;height:100%;overflow:visible}.error-axis{stroke:var(--border);stroke-width:1}.error-line{fill:none;stroke:#ff4d5a;stroke-width:3;vector-effect:non-scaling-stroke}.error-dot{fill:#ff4d5a;stroke:#ffb3b8;stroke-width:1;vector-effect:non-scaling-stroke}.overview-extra-empty{width:100%;height:100%;min-height:220px;display:flex;align-items:center;justify-content:center;color:var(--text-3)}
+@media(max-width:1000px){.overview-bottom-pair{grid-template-columns:1fr}}
+/* ===== 20260916 추가 끝 : Overview 하단 Table Chunk / Internal Runtime Error ===== */
+
+/* ===== 20260916 추가 시작 : Table Chunk 선택형 그래프/상세/목록 ===== */
+.chunk-panel{min-width:0}.chunk-selected-area{height:245px;padding:12px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px;border-bottom:1px solid var(--border);box-sizing:border-box}.chunk-selected-graph{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}.chunk-square--selected{flex:0 0 auto}.chunk-selected-caption{width:100%;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden}.chunk-selected-caption strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chunk-selected-caption span{font-size:11px;color:var(--text-3)}
+.chunk-detail-scroll{height:219px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;background:var(--panel-alt);padding:10px;box-sizing:border-box}.chunk-detail-title{font-weight:700;margin-bottom:8px}.chunk-detail-list{display:grid;grid-template-columns:minmax(125px,.9fr) minmax(0,1.1fr);gap:0;margin:0;font-size:11px}.chunk-detail-list dt,.chunk-detail-list dd{margin:0;padding:6px 8px;border-bottom:1px solid var(--border)}.chunk-detail-list dt{color:var(--text-3)}.chunk-detail-list dd{color:var(--text-1);word-break:break-all;text-align:right}
+.chunk-table-scroll{height:245px;overflow:auto}.chunk-table{width:max-content;min-width:100%;border-collapse:collapse;font-size:11px}.chunk-table th{position:sticky;top:0;z-index:2;background:var(--panel-alt);color:var(--text-2);text-align:left;white-space:nowrap;padding:8px 10px;border-bottom:1px solid var(--border)}.chunk-table td{white-space:nowrap;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2)}.chunk-table tbody tr{cursor:pointer}.chunk-table tbody tr:hover,.chunk-table tbody tr.is-selected{background:rgba(84,155,255,.12)}.chunk-table tbody tr.is-selected td:first-child{color:var(--link);font-weight:700}
+@media(max-width:1200px){.chunk-selected-area{grid-template-columns:200px minmax(0,1fr)}}
+/* ===== 20260916 추가 끝 : Table Chunk 선택형 그래프/상세/목록 ===== */
+
+/* ===== 20260916 추가 시작 : Internal Runtime Error Node별 message_type_id 그래프 + 이벤트 목록 ===== */
+.runtime-panel{min-width:0}.runtime-event-chart{height:245px;padding:10px 12px 4px;box-sizing:border-box;border-bottom:1px solid var(--border)}.runtime-event-chart svg{display:block;width:100%;height:185px}.runtime-legend{height:34px;display:flex;align-items:center;gap:10px;overflow-x:auto;white-space:nowrap;font-size:10px;color:var(--text-2)}.runtime-legend span{display:inline-flex;align-items:center;gap:4px}.runtime-legend i{width:9px;height:9px;border-radius:50%;flex:0 0 auto}.runtime-table-scroll{height:245px;overflow:auto}.runtime-table{width:max-content;min-width:100%;border-collapse:collapse;font-size:11px}.runtime-table th{position:sticky;top:0;z-index:2;background:var(--panel-alt);color:var(--text-2);text-align:left;white-space:nowrap;padding:8px 10px;border-bottom:1px solid var(--border)}.runtime-table td{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2)}.runtime-table tbody tr.is-error{background:rgba(255,77,90,.07)}.runtime-table tbody tr.is-error td:nth-child(7){color:#ff6b73;font-weight:700}
+/* ===== 20260916 추가 끝 : Internal Runtime Error Node별 message_type_id 그래프 + 이벤트 목록 ===== */
+
+/* ===== 20260925 추가 시작 : Overview 크기를 drilldown/main typography에 맞춤 (색상 유지) ===== */
+.content--overview .dashboard-canvas { font-size:14px; }
+.content--overview .panel__head { padding:10px 16px; }
+.content--overview .panel__title { font-size:13.5px; font-weight:600; }
+.content--overview .panel__body { padding:8px 10px; }
+.content--overview .kpi-tile { padding:14px 18px; }
+.content--overview .kpi-tile__label { font-size:11.5px; }
+.content--overview .kpi-tile__value { font-size:30px; line-height:1.2; }
+.content--overview table { font-size:13px; }
+.content--overview table th { font-size:12px; padding:9px 12px; }
+.content--overview table td { padding:9px 12px; }
+.content--overview .metric-sub__title { font-size:12px; }
+.content--overview .overview-extra-sub { font-size:12px; }
+.content--overview .overview-extra-panel { min-height:360px; }
+.content--overview .chunk-map { min-height:310px; }
+.content--overview .error-chart { height:310px; }
+/* 배경/패널/의미색은 기존 Overview 변수를 그대로 사용한다. */
+/* ===== 20260925 추가 끝 : Overview 크기를 drilldown/main typography에 맞춤 ===== */
+
+/* ===== 20260928 추가 시작 : Table Chunk 고정 눈금 + 좌하단 2중 사각형 ===== */
+.chunk-square--scale{position:relative;display:block;overflow:visible;background:rgba(25,45,73,.35);border:1px solid rgba(139,164,196,.35)}
+.chunk-square__uncompressed{position:absolute;left:0;bottom:0;border:2px solid #8aa7d8;background:rgba(138,167,216,.10);box-sizing:border-box;z-index:1}
+.chunk-square--scale .chunk-square__compressed{left:0;bottom:0;border:2px solid var(--link);background:rgba(84,155,255,.22);z-index:2}
+.chunk-square__origin{position:absolute;left:3px;bottom:1px;z-index:3;font-size:9px;color:var(--text-3);line-height:1}
+.chunk-square-legend{margin-top:6px;display:flex;flex-direction:column;gap:2px;align-items:center;font-size:10px;color:var(--text-3)}
+/* ===== 20260928 추가 끝 : Table Chunk 고정 눈금 + 좌하단 2중 사각형 ===== */

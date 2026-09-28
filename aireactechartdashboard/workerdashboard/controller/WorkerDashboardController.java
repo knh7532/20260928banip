@@ -1,0 +1,4 @@
+package com.apptomo.v4.aireactechartdashboard.workerdashboard.controller;
+import com.apptomo.v4.aireactechartdashboard.workerdashboard.dto.*; import com.apptomo.v4.aireactechartdashboard.workerdashboard.service.WorkerDashboardService; import lombok.RequiredArgsConstructor; import org.springframework.web.bind.annotation.*; import java.util.*;
+// 20260928 추가
+@RestController @RequiredArgsConstructor @RequestMapping("/api/aireactechartdashboard/worker") public class WorkerDashboardController {private final WorkerDashboardService service; @GetMapping("/nodes") public List<WorkerNodeDto> nodes(){return service.nodes();} @GetMapping("/metrics") public List<WorkerMetricDto> metrics(@RequestParam String hostname,@RequestParam String startTime,@RequestParam String endTime){return service.metrics(hostname,startTime,endTime);} }

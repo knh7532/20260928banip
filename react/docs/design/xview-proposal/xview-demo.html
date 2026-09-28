@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>X-View 스타일 트랜잭션 산점도</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-normal:  #2a78d6;   /* 정상 트랜잭션 (categorical slot 1) */
+    --status-error:   #d03b3b;   /* 에러 트랜잭션 (status: critical) */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-normal:  #3987e5;
+      --status-error:   #d03b3b;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-normal:  #3987e5;
+    --status-error:   #d03b3b;
+  }
+
+  html, body { margin: 0; }
+  .viz-root {
+    min-height: 100vh;
+    background: var(--page);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+    padding: 28px;
+    box-sizing: border-box;
+  }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  h1 { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 12.5px; color: var(--text-secondary); margin: 0; }
+  .legend { display: flex; gap: 18px; align-items: center; padding-top: 4px; flex: none; }
+  .legend .item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-secondary); }
+  .key-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--series-normal); }
+  .key-x { width: 11px; height: 11px; position: relative; }
+  .key-x::before, .key-x::after {
+    content: ""; position: absolute; left: 5px; top: 0; width: 2px; height: 11px;
+    background: var(--status-error); border-radius: 1px;
+  }
+  .key-x::before { transform: rotate(45deg); }
+  .key-x::after  { transform: rotate(-45deg); }
+
+  .chart-wrap { position: relative; margin-top: 12px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; }
+  .tick-label { font-size: 11px; fill: var(--text-muted); }
+  .axis-title { font-size: 11px; fill: var(--text-muted); }
+  .anno-title { font-size: 12px; font-weight: 600; fill: var(--text-primary); }
+  .anno-sub   { font-size: 11px; fill: var(--text-secondary); }
+
+  .tooltip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12); min-width: 150px; z-index: 3;
+  }
+  .tooltip .t-name { font-weight: 600; margin-bottom: 3px; }
+  .tooltip .t-row { color: var(--text-secondary); display: flex; justify-content: space-between; gap: 12px; }
+  .tooltip .t-row b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .selbox {
+    position: absolute; pointer-events: none; display: none;
+    border: 1px dashed var(--series-normal);
+    background: color-mix(in srgb, var(--series-normal) 8%, transparent);
+    z-index: 2;
+  }
+  .selinfo {
+    position: absolute; display: none;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 4;
+  }
+  .selinfo b { font-variant-numeric: tabular-nums; }
+  .caption { font-size: 11.5px; color: var(--text-muted); margin: 10px 2px 0; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="card">
+    <div class="head">
+      <div>
+        <h1>X-View 트랜잭션 응답 분포 — 14:00–14:12</h1>
+        <p class="sub">점 1개 = 트랜잭션 1건 · X축 = 종료 시각 · Y축 = 응답시간. 영역을 드래그하면 해당 트랜잭션이 집계됩니다.</p>
+      </div>
+      <div class="legend">
+        <span class="item"><span class="key-dot"></span>정상 트랜잭션</span>
+        <span class="item"><span class="key-x"></span>에러 트랜잭션</span>
+      </div>
+    </div>
+    <div class="chart-wrap" id="wrap">
+      <svg id="chart" viewBox="0 0 1060 500" role="img"
+           aria-label="트랜잭션 응답시간 산점도. 정상 응답 밀집대 위로 파도치기 패턴과 폭포수 패턴이 나타남"></svg>
+      <div class="tooltip" id="tip"></div>
+      <div class="selbox" id="selbox"></div>
+      <div class="selinfo" id="selinfo"></div>
+    </div>
+    <p class="caption">합성 데이터 · 제니퍼 X-View의 읽기 방식을 재현한 학습용 차트 (하단 밀집대 = 정상, 14:03~ 파도치기, 14:08~ 폭포수)</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---- deterministic PRNG (고정 시드: 스크린샷 재현성) ----
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  const rnd = mulberry32(20260813);
+
+  // ---- 데이터 생성: 720초(12분) 창 ----
+  const APPS = ['/api/order/list', '/api/order/detail', '/api/cart/add', '/api/auth/token', '/api/search'];
+  const pts = []; // {t(sec), ms, err, app}
+  function push(t, ms, err) {
+    pts.push({ t, ms, err, app: APPS[Math.floor(rnd() * APPS.length)] });
+  }
+
+  // 1) 정상 밀집대: 창 전체, 90~900ms
+  for (let t = 0; t < 720; t += 0.9 + rnd() * 1.6) {
+    const ms = 90 + rnd() * rnd() * 800;
+    push(t, ms, rnd() < 0.012);
+  }
+  // 2) 파도치기 패턴: 14:03~14:06 — 트래픽 증가로 응답이 물결치듯 불안정
+  for (let t = 180; t < 360; t += 0.5 + rnd() * 1.1) {
+    const env = 0.5 + 0.5 * Math.sin((t - 180) / 14);
+    if (rnd() < 0.28 + env * 0.45) {
+      const ms = 700 + env * 2900 + rnd() * 700;
+      push(t, ms, rnd() < 0.05 + env * 0.06);
+    }
+  }
+  // 3) 폭포수 패턴: 14:08~14:11 — 30초 단위 계단으로 지연이 단계적 악화
+  for (let t = 480; t < 660; t += 0.7 + rnd() * 1.2) {
+    const step = Math.floor((t - 480) / 30) + 1;          // 1..6
+    if (rnd() < 0.55) {
+      const ms = step * 900 + rnd() * 450;
+      push(t, ms, rnd() < step * 0.09);                    // 위 계단일수록 에러 증가
+    }
+  }
+
+  // ---- 스케일 ----
+  const W = 1060, H = 500, M = { l: 58, r: 22, t: 36, b: 42 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const X_MAX = 720, Y_MAX = 7000; // ms
+  const x = t => M.l + (t / X_MAX) * iw;
+  const y = ms => M.t + ih - (Math.min(ms, Y_MAX) / Y_MAX) * ih;
+
+  const svg = document.getElementById('chart');
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs, parent) {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(n);
+    return n;
+  }
+
+  // ---- 그리드 · 축 ----
+  for (let s = 0; s <= 7; s++) { // Y: 0~7초, 1초 간격
+    const yy = y(s * 1000);
+    el('line', { x1: M.l, x2: W - M.r, y1: yy, y2: yy, stroke: 'var(--grid)', 'stroke-width': 1 });
+    el('text', { x: M.l - 8, y: yy + 4, 'text-anchor': 'end', class: 'tick-label' }).textContent =
+      s === 0 ? '0' : s + 's';
+  }
+  for (let m = 0; m <= 12; m += 2) { // X: 2분 간격
+    const xx = x(m * 60);
+    el('text', { x: xx, y: H - M.b + 18, 'text-anchor': 'middle', class: 'tick-label' }).textContent =
+      '14:' + String(m).padStart(2, '0');
+  }
+  el('line', { x1: M.l, x2: W - M.r, y1: M.t + ih, y2: M.t + ih, stroke: 'var(--axis)', 'stroke-width': 1 });
+  el('text', { x: M.l, y: H - 6, class: 'axis-title' }).textContent = '트랜잭션 종료 시각 →';
+  const yt = el('text', { x: 14, y: 18, class: 'axis-title' });
+  yt.textContent = '응답시간 ↑';
+
+  // ---- 점 찍기 (정상 = 원, 에러 = ✕) ----
+  const gDots = el('g', {});
+  const hitAreas = [];
+  pts.forEach((p, i) => {
+    const cx = x(p.t), cy = y(p.ms);
+    if (p.err) {
+      const a = 3.4;
+      el('path', {
+        d: `M${cx - a} ${cy - a} L${cx + a} ${cy + a} M${cx - a} ${cy + a} L${cx + a} ${cy - a}`,
+        stroke: 'var(--status-error)', 'stroke-width': 1.8, 'stroke-linecap': 'round',
+        fill: 'none', 'paint-order': 'stroke'
+      }, gDots);
+    } else {
+      el('circle', {
+        cx, cy, r: 3.2, fill: 'var(--series-normal)', 'fill-opacity': 0.72,
+        stroke: 'var(--surface-1)', 'stroke-width': 1
+      }, gDots);
+    }
+    hitAreas.push({ cx, cy, i });
+  });
+
+  // ---- 패턴 주석 (선별적 직접 라벨) ----
+  function anno(px, py, title, sub, anchor) {
+    el('text', { x: px, y: py, 'text-anchor': anchor || 'middle', class: 'anno-title' }).textContent = title;
+    el('text', { x: px, y: py + 15, 'text-anchor': anchor || 'middle', class: 'anno-sub' }).textContent = sub;
+  }
+  anno(x(268), y(5150) - 14, '파도치기 패턴', '트래픽 증가로 응답 불안정');
+  anno(x(600), y(6350) - 14, '폭포수 패턴', '지연이 계단형으로 악화');
+
+  // ---- 툴팁 (점 호버 → 트랜잭션 상세: X-View의 드릴다운 축약판) ----
+  const wrap = document.getElementById('wrap');
+  const tip = document.getElementById('tip');
+  function fmtTime(t) {
+    const mm = Math.floor(t / 60), ss = Math.floor(t % 60);
+    return '14:' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  }
+  function nearest(mx, my) {
+    let best = null, bd = 12 * 12;
+    for (const h of hitAreas) {
+      const dx = h.cx - mx, dy = h.cy - my, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = h; }
+    }
+    return best;
+  }
+  function svgPoint(ev) {
+    const r = svg.getBoundingClientRect();
+    return { mx: (ev.clientX - r.left) * (W / r.width), my: (ev.clientY - r.top) * (H / r.height), r };
+  }
+  svg.addEventListener('mousemove', ev => {
+    if (dragging) return;
+    const { mx, my, r } = svgPoint(ev);
+    const h = nearest(mx, my);
+    if (!h) { tip.style.display = 'none'; return; }
+    const p = pts[h.i];
+    tip.innerHTML =
+      '<div class="t-name">' + p.app + '</div>' +
+      '<div class="t-row"><span>종료 시각</span><b>' + fmtTime(p.t) + '</b></div>' +
+      '<div class="t-row"><span>응답시간</span><b>' + Math.round(p.ms).toLocaleString() + ' ms</b></div>' +
+      '<div class="t-row"><span>상태</span><b>' + (p.err ? '에러' : '정상') + '</b></div>';
+    tip.style.display = 'block';
+    tip.style.left = (h.cx * r.width / W + 14) + 'px';
+    tip.style.top = (h.cy * r.height / H - 10) + 'px';
+  });
+  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+
+  // ---- 드래그 선택 (X-View 시그니처 인터랙션의 축약판) ----
+  const selbox = document.getElementById('selbox');
+  const selinfo = document.getElementById('selinfo');
+  let dragging = false, sx = 0, sy = 0;
+  svg.addEventListener('mousedown', ev => {
+    const { mx, my } = svgPoint(ev);
+    dragging = true; sx = mx; sy = my;
+    tip.style.display = 'none'; selinfo.style.display = 'none';
+    selbox.style.display = 'block';
+  });
+  window.addEventListener('mousemove', ev => {
+    if (!dragging) return;
+    const { mx, my, r } = svgPoint(ev);
+    const x0 = Math.min(sx, mx), x1 = Math.max(sx, mx);
+    const y0 = Math.min(sy, my), y1 = Math.max(sy, my);
+    selbox.style.left = (x0 * r.width / W) + 'px';
+    selbox.style.top = (y0 * r.height / H) + 'px';
+    selbox.style.width = ((x1 - x0) * r.width / W) + 'px';
+    selbox.style.height = ((y1 - y0) * r.height / H) + 'px';
+  });
+  window.addEventListener('mouseup', ev => {
+    if (!dragging) return;
+    dragging = false;
+    const { mx, my, r } = svgPoint(ev);
+    const x0 = Math.min(sx, mx), x1 = Math.max(sx, mx);
+    const y0 = Math.min(sy, my), y1 = Math.max(sy, my);
+    selbox.style.display = 'none';
+    if (x1 - x0 < 6 || y1 - y0 < 6) return;
+    let n = 0, ne = 0, sum = 0;
+    hitAreas.forEach(h => {
+      if (h.cx >= x0 && h.cx <= x1 && h.cy >= y0 && h.cy <= y1) {
+        n++; sum += pts[h.i].ms;
+        if (pts[h.i].err) ne++;
+      }
+    });
+    if (!n) return;
+    selinfo.innerHTML = '선택 <b>' + n.toLocaleString() + '건</b> · 에러 <b>' + ne +
+      '건</b> · 평균 응답 <b>' + Math.round(sum / n).toLocaleString() + ' ms</b>';
+    selinfo.style.display = 'block';
+    selinfo.style.left = (x0 * r.width / W) + 'px';
+    selinfo.style.top = Math.max(0, y0 * r.height / H - 40) + 'px';
+  });
+})();
+</script>
+</body>
+</html>

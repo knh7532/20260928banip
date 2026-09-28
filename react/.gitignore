@@ -1,0 +1,30 @@
+# 시크릿·환경 설정 (Vite가 읽는 모든 변형 — 예시 파일만 커밋)
+.env
+.env.*
+!.env.example
+
+# 의존성·빌드 산출물
+node_modules/
+dist/
+coverage/
+
+# 로그 (도구가 임의 생성하는 로그 포함)
+*.log
+
+# 네이티브 실행 산출물
+native/logs/
+native/run/
+native-linux/logs/
+native-linux/run/
+native-linux/.venv/
+
+# 망분리 반출 산출물 (개발 PC에서 생성 — 커밋 안 함)
+*.tar.gz
+*.tar.gz.sha256
+dist/checksums.sha256
+
+# 캐시
+.vite/
+
+# QA용 크롬 프로필 (cdp-qa.mjs가 사용 — 브라우저 산출물, 소스 아님)
+.chrome-qa/

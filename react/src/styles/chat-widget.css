@@ -1,0 +1,144 @@
+/**
+ * AI Agent 채팅 위젯 — `ChatWidget.tsx`가 직접 import한다.
+ *
+ * 위젯은 탑뷰·상세 대시보드 어디에서나 같은 자리에 떠야 하므로 `position: fixed`다.
+ * **`.app-shell`(2열 그리드)의 자식이 되어도 안전하다** — fixed 요소는 흐름에서
+ * 빠져 암묵 트랙을 만들지 않는다. 그래도 `App.tsx`에서 셸 바깥 형제로 두어
+ * §4-16 같은 사고를 애초에 피한다.
+ *
+ * 토큰은 여기서 다시 선언한다. 탑뷰(`app.css`)와 상세(`drilldown.css`)가 같은 이름을
+ * 다른 값으로 쓰기 때문에, 어느 화면에 얹히든 위젯 색이 흔들리지 않아야 한다.
+ */
+.ax-chat-fab,
+.ax-chat {
+  --ax-accent: #4fc3f7;
+  --ax-card: #13233c;
+  --ax-head: #182b47;
+  --ax-border: #22385c;
+  --ax-text: #dbe6f5;
+  --ax-muted: #7e93b4;
+
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+
+/* ── 동그란 버튼 ── */
+.ax-chat-fab {
+  align-items: center;
+  background: linear-gradient(150deg, #2f6ea8 0%, var(--ax-accent) 100%);
+  border: 1px solid rgb(79 195 247 / 45%);
+  border-radius: 50%;
+  bottom: 22px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+  color: #06121f;
+  cursor: pointer;
+  display: flex;
+  font-size: 22px;
+  height: 54px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: fixed;
+  right: 22px;
+  transition: transform .14s ease, box-shadow .14s ease;
+  width: 54px;
+  z-index: 2147483000;   /* 포털 셸(`.sq-react-page`)이 매우 높은 z-index를 쓴다 */
+}
+.ax-chat-fab:hover { box-shadow: 0 8px 26px rgb(0 0 0 / 55%); transform: translateY(-2px); }
+.ax-chat-fab:focus-visible { outline: 2px solid var(--ax-accent); outline-offset: 3px; }
+.ax-chat-fab--open { background: var(--ax-head); border-color: var(--ax-border); color: var(--ax-text); }
+
+/* ── 대화 패널 ── */
+.ax-chat {
+  background: var(--ax-card);
+  border: 1px solid var(--ax-border);
+  border-radius: 12px;
+  bottom: 88px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 55%);
+  display: flex;
+  flex-direction: column;
+  height: min(620px, calc(100vh - 130px));
+  overflow: hidden;
+  position: fixed;
+  right: 22px;
+  width: min(420px, calc(100vw - 44px));
+  z-index: 2147482999;
+
+  /* 닫힘 상태 — `display:none`이 아니라 감춰 두어야 열 때 iframe이 다시 로드되지 않는다.
+     `visibility: hidden`이면 안에 있는 것이 포커스를 못 받는다. */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(.98);
+  transform-origin: 100% 100%;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s;
+  visibility: hidden;
+}
+.ax-chat--open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  visibility: visible;
+}
+
+/* 헤더가 손잡이다. 버튼은 각자 `cursor: pointer`로 덮는다. */
+.ax-chat__head {
+  align-items: center;
+  cursor: grab;
+  touch-action: none;      /* 터치에서 스크롤 제스처에 뺏기지 않게 */
+  user-select: none;
+  background: var(--ax-head);
+  border-bottom: 1px solid var(--ax-border);
+  color: var(--ax-text);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 9px 10px 9px 14px;
+}
+.ax-chat__title { flex: 1; font-size: 13.5px; font-weight: 600; }
+.ax-chat__act {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--ax-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  height: 26px;
+  justify-content: center;
+  text-decoration: none;
+  width: 26px;
+}
+.ax-chat__act:hover { background: rgb(79 195 247 / 12%); color: var(--ax-text); }
+.ax-chat__act:focus-visible { outline: 2px solid var(--ax-accent); outline-offset: 1px; }
+
+/* 끄는 동안: 손잡이 커서를 바꾸고, **iframe이 포인터를 훔치지 못하게** 한다.
+   캡처를 걸어도 커서가 Chainlit 위를 지나면 그쪽 텍스트가 선택된다. */
+.ax-chat--dragging .ax-chat__head { cursor: grabbing; }
+.ax-chat--dragging .ax-chat__frame { pointer-events: none; }
+/* 옮기는 동안에는 열림 애니메이션이 따라붙지 않아야 커서를 정확히 따라온다. */
+.ax-chat--dragging { transition: none !important; }
+
+.ax-chat__frame {
+  background: #fff;      /* Chainlit 기본 테마가 밝다 — 로딩 중 검은 사각형을 피한다 */
+  border: 0;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+/* 좁은 화면에서는 거의 전체를 덮는다 — 420px 패널은 모바일에서 못 쓴다. */
+@media (width <= 520px) {
+  .ax-chat {
+    bottom: 84px;
+    height: calc(100vh - 104px);
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+  .ax-chat-fab { bottom: 16px; right: 16px; }
+}
+
+/* 저모션 설정에서는 열고 닫는 움직임을 없앤다. */
+@media (prefers-reduced-motion: reduce) {
+  .ax-chat, .ax-chat-fab { transition: none; }
+}

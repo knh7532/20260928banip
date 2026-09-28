@@ -1,0 +1,74 @@
+/* 디자인 토큰 — 원본 시안(PPTX)에서 추출한 실제 색상값.
+   변경 시 docs/design-tokens.md와 함께 갱신할 것 (테스트가 대사한다). */
+:root {
+  /* 배경·표면 */
+  --bg: #0e1420;
+  --panel: #141b2e;
+  --panel-alt: #1a2338;
+  --panel-sel: #1b2a47;
+  --border: #232d45;
+
+  /* 텍스트 */
+  --text: #ffffff;
+  --text-2: #9098ac;
+  --text-3: #5c6579;
+  --text-on-accent: #0a0f1e;
+
+  /* 상태 */
+  --ok: #4ade80;
+  --ok-bg: #163526;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --accent: #22d3ee;
+  --link: #5b9bff;
+  --muted: #6b7280;
+
+  /* GPU 시리즈 — Google Finance풍 뮤티드 팔레트 (E4, 인간 확정 2026-08-25) */
+  --gpu-0: #8ab4f8;
+  --gpu-1: #81c995;
+  --gpu-2: #fdd663;
+  --gpu-3: #f28b82;
+
+  /* 노드(서버) 시리즈 — R9 All 뷰 노드 평균 3선. E4: 뮤티드 사다리 공용(시안 확정). */
+  --node-1: #8ab4f8;
+  --node-2: #81c995;
+  --node-3: #fdd663;
+
+  /* 쿼리 유형 (원본 범례 색) */
+  --qt-select: #4ade80;
+  --qt-etl: #f5a623;
+  --qt-aggregation: #a78bfa;
+  --qt-join: #22d3ee;
+  --qt-fullscan: #f87171;
+  --qt-other: #6b7280;
+
+  /* 타이포 */
+  --font: "Pretendard", "Pretendard Variable", -apple-system, "Segoe UI",
+    "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", monospace;
+  --fs-title: 16px;
+  --fs-panel-title: 12px;
+  --fs-body: 11px;
+  --fs-label: 10px;
+  --fs-kpi: 18px;
+
+  /* 간격·모양 */
+  --gap: 8px;
+  --radius: 6px;
+  --panel-radius: 3px;
+  --sidebar-w: clamp(176px, 12.5vw, 208px);
+  --sidebar-min-w: 176px;
+  --sidebar-max-w: 208px;
+  --sidebar-radius: 32px;
+
+  /* R8 Grafana 24-column / 34-row dashboard */
+  --dashboard-row-unit: 24px;
+  --dashboard-kpi-h: 64px; /* R9 KPI 스트립 — 첫 시선의 요약 4타일 */
+  --dashboard-top-h: 168px;
+  --dashboard-queries-h: 336px; /* X8: GPU 화면 전용 top override — 쿼리 리스트 세로 확장 */
+  --dashboard-qsummary-h: 96px; /* X8: 쿼리 개수 요약 카드 행 — 2026-09-04 48→96(세로 구성, 인간 지시) */
+  --dashboard-middle-h: 264px;
+  --dashboard-bottom-h: 432px; /* R9.1: 16→18 rows — 시계열 y축 판독성 (인간 지시) */
+  --dashboard-gap: 8px;
+  --dashboard-min-w: 1120px;
+}
